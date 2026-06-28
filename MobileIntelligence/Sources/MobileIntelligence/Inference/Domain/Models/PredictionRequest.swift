@@ -23,6 +23,33 @@
 //
 
 public extension MobileIntelligence.Inference {
-    struct PredictionRequest {
+    enum Reasoning: Sendable {
+        case low
+        case medium
+        case high
+        case deep
+    }
+
+    struct Request: Sendable {
+        let prompt: MobileIntelligence.Core.Prompt
+        let context: MobileIntelligence.Core.Context
+        let query: MobileIntelligence.Core.Query
+        let temperature: Double
+        let maxTokens: Int?
+        let options: ProviderOptions
+
+        public init(prompt: MobileIntelligence.Core.Prompt,
+                    context: MobileIntelligence.Core.Context,
+                    query: MobileIntelligence.Core.Query,
+                    temperature: Double, maxTokens: Int?,
+                    options: ProviderOptions) {
+            self.prompt = prompt
+            self.context = context
+            self.query = query
+            self.temperature = temperature
+            self.maxTokens = maxTokens
+            self.options = options
+        }
+        
     }
 }

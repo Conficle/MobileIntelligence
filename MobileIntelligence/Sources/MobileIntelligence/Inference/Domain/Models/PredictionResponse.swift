@@ -24,6 +24,6 @@
 //
 
 public extension MobileIntelligence.Inference {
-    struct PredictionResponse {
+    struct Response: Sendable {
     }
 }

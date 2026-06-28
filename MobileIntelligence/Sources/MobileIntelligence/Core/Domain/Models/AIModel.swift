@@ -6,7 +6,7 @@
 //
 
 public extension MobileIntelligence.Core {
-    struct AIModel {
-        
+    protocol AIModel: Sendable {
+        var name: String { get }
     }
 }

@@ -24,6 +24,6 @@
 //
 
 public extension MobileIntelligence.Core {
-    struct Prompt {
+    struct Prompt: Sendable {
     }
 }

@@ -23,6 +23,34 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
-public extension MobileIntelligence.Inference {
-    protocol InferenceEngine {}
+extension MobileIntelligence.Inference {
+    protocol InferenceEngine: Sendable, Actor {
+        func predict(forRequest request: MobileIntelligence.Inference.Request) async throws -> MobileIntelligence.Inference.Response
+    }
+}
+
+extension MobileIntelligence.Inference {
+    final actor InferenceEngineActor: InferenceEngine {
+        private let providerConfiguration: MobileIntelligence.Core.ProviderConfiguration
+        private let providerFactory: MobileIntelligence.Infrastructure.ProviderFactory
+        private var provider: (any MobileIntelligence.Inference.InferenceCapable)?
+
+        init(providerConfiguration: MobileIntelligence.Core.ProviderConfiguration,
+             providerFactory: MobileIntelligence.Infrastructure.ProviderFactory = MobileIntelligence.Infrastructure.DefaultProviderFactory()) {
+            self.providerConfiguration = providerConfiguration
+            self.providerFactory = providerFactory
+            Task { [weak self] in
+                try await self?.makeInferenceProvider(withConfguration: providerConfiguration)
+            }
+        }
+
+        func predict(forRequest request: MobileIntelligence.Inference.Request) async throws -> MobileIntelligence.Inference.Response {
+            let response = try await provider?.predict(forRequest: request)
+            return MobileIntelligence.Inference.Response()
+        }
+
+        private func makeInferenceProvider(withConfguration configuration: MobileIntelligence.Core.ProviderConfiguration) async throws {
+            self.provider = try await providerFactory.makeInferenceProvider(forproviderConfiguration: providerConfiguration)
+        }
+    }
 }
