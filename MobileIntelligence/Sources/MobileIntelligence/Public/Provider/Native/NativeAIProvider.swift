@@ -27,8 +27,10 @@ import FoundationModels
 
 @available(iOS 26.0, *)
 public final actor NativeAIProvider: AIProvider {
+    var session: LanguageModelSession?
+
+    public init() {}
+
     public struct Configuration {
-        
     }
 }
-

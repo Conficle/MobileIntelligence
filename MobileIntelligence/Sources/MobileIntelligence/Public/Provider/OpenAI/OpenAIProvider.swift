@@ -23,8 +23,9 @@
 //
 
 public final actor OpenAIProvider: AIProvider {
+    public init() {}
+
     public struct Configuration {
         
     }
 }
-

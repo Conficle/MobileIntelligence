@@ -24,4 +24,9 @@
 //
 
 public struct PredictionResponse: Sendable {
+    public let content: String
+
+    init(content: String = "") {
+        self.content = content
+    }
 }

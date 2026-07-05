@@ -23,6 +23,10 @@
 //
 
 extension OpenAIProvider: InferenceProvider {
+    public func bootstrap() async {
+        
+    }
+
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return PredictionResponse()
     }

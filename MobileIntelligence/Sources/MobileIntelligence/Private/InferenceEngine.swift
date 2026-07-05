@@ -24,17 +24,22 @@
 //
 
 protocol InferenceEngine: Actor {
+    func bootstrapInferenceProvider() async
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }
 
 final actor DefaultInferenceEngine: InferenceEngine {
-    private let provider: InferenceProvider
+    let provider: InferenceProvider
 
     init(provider: InferenceProvider) {
         self.provider = provider
     }
 
+    func bootstrapInferenceProvider() async {
+    }
+
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
-        return PredictionResponse()
+        let response = try await provider.predict(forRequest: request)
+        return response
     }
 }

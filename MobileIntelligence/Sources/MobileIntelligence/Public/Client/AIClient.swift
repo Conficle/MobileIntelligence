@@ -29,7 +29,11 @@ public final actor DefaultAIClient: AIClient {
     var inferenceEnginge: InferenceEngine?
     let clientFactory: ClientFactory
 
-    init(clientFactory: ClientFactory = DefaultClientFactory()) {
+    public init() {
+        self.clientFactory = DefaultClientFactory()
+    }
+
+    init(clientFactory: ClientFactory) {
         self.clientFactory = clientFactory
     }
 }

@@ -26,9 +26,34 @@
 import FoundationModels
 
 @available(iOS 26.0, *)
-extension NativeAIProvider: InferenceProvider {
+extension NativeAIProvider: AppleInferenceProvider {
+    public func bootstrap() async {
+    }
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
-        let session = LanguageModelSession()
-        return PredictionResponse()
+        let availability = SystemLanguageModel.default.availability
+        makeLanguageModelSession(forInstruction: request.prompt.instructions)
+        guard let response = try await session?.respond(to: request.query.question) else {
+            throw CoreError.predictionFailed
+        }
+        return PredictionResponse(content: response.content)
+    }
+
+    public func predict<T: Generable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
+        let session = LanguageModelSession(model: .default, instructions: request.prompt.instructions)
+        let response = try await session.respond(to: request.query.question, generating: generating)
+        return response.content
+    }
+}
+
+@available(iOS 26.0, *)
+private extension NativeAIProvider {
+    @discardableResult
+    func makeLanguageModelSession(forInstruction instruction: String) -> LanguageModelSession {
+        if let session {
+            return session
+        }
+        let session = LanguageModelSession(model: .default, instructions: instruction)
+        self.session = session
+        return session
     }
 }

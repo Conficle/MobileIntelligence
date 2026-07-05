@@ -23,8 +23,9 @@
 //
 
 public final actor AnthropicAIProvider: AIProvider {
+    public init() {}
+
     public struct Configuration {
         
     }
 }
-

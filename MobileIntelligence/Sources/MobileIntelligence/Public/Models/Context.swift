@@ -22,4 +22,6 @@
 //  Created by Nitin Bhagwan Manghwani on 28/06/26.
 //
 
-public struct Context: Sendable {}
+public struct Context: Sendable {
+    public init() {}
+}
