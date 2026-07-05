@@ -23,5 +23,5 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
-public struct InferenceResponse: Sendable {
+public struct PredictionResponse: Sendable {
 }

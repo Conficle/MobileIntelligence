@@ -24,7 +24,7 @@
 //
 
 protocol InferenceEngine: Actor {
-    func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse
+    func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }
 
 final actor DefaultInferenceEngine: InferenceEngine {
@@ -34,7 +34,7 @@ final actor DefaultInferenceEngine: InferenceEngine {
         self.provider = provider
     }
 
-    func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse {
-        return InferenceResponse()
+    func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
+        return PredictionResponse()
     }
 }

@@ -22,8 +22,13 @@
 //  Created by Nitin Bhagwan Manghwani on 05/07/26.
 //
 
+
+import FoundationModels
+
+@available(iOS 26.0, *)
 extension NativeAIProvider: InferenceProvider {
-    public func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse {
-        return InferenceResponse()
+    public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
+        let session = LanguageModelSession()
+        return PredictionResponse()
     }
 }

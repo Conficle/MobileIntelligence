@@ -23,6 +23,6 @@
 //
 
 public protocol InferenceClient: Actor {
-    func enable(withProvider inferenceProvider: InferenceProvider) async
-    func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse
+    func bootstrapInference(_ inferenceProvider: InferenceProvider) async
+    func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }

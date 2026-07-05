@@ -23,5 +23,5 @@
 //
 
 public protocol InferenceProvider: Actor {
-    func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse
+    func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }

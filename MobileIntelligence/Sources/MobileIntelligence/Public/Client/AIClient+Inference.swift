@@ -23,11 +23,11 @@
 //
 
 extension DefaultAIClient {
-    public func enable(withProvider inferenceProvider: any InferenceProvider) async {
+    public func bootstrapInference(_ inferenceProvider: any InferenceProvider) async {
         inferenceEnginge = await clientFactory.inferenceEngine(forProvider: inferenceProvider)
     }
     
-    public func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse {
+    public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         guard let response = try await inferenceEnginge?.predict(forRequest: request) else {
             throw CoreError.predictionFailed
         }

@@ -23,7 +23,7 @@
 //
 
 extension AnthropicAIProvider: InferenceProvider {
-    public func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse {
-        return InferenceResponse()
+    public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
+        return PredictionResponse()
     }
 }
