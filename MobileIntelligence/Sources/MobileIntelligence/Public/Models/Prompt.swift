@@ -24,4 +24,9 @@
 //
 
 public struct Prompt: Sendable {
+    public let instructions: String
+
+    public init(instructions: String = "") {
+        self.instructions = instructions
+    }
 }

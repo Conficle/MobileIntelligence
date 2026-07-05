@@ -17,24 +17,16 @@
 //
 
 //
-//  InferenceEngine.swift
+//  PredictionResponse.swift
 //  MobileIntelligence
 //
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
-protocol InferenceEngine: Actor {
-    func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse
-}
+public struct PredictionResponse: Sendable {
+    public let content: String
 
-final actor DefaultInferenceEngine: InferenceEngine {
-    private let provider: InferenceProvider
-
-    init(provider: InferenceProvider) {
-        self.provider = provider
-    }
-
-    func predict(forRequest request: InferenceRequest) async throws -> InferenceResponse {
-        return InferenceResponse()
+    init(content: String = "") {
+        self.content = content
     }
 }

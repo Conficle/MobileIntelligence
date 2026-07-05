@@ -29,20 +29,20 @@ public enum Reasoning: Sendable {
     case deep
 }
 
-public struct InferenceRequest: Sendable {
+public struct PredictionRequest: Sendable {
     let prompt: Prompt
     let context: Context
     let query: Query
     let temperature: Double
     let maxTokens: Int?
-    let reasoning: Reasoning?
+    let reasoning: Reasoning
 
     public init(prompt: Prompt,
                 context: Context,
                 query: Query,
                 temperature: Double,
                 maxTokens: Int?,
-                reasoning: Reasoning?) {
+                reasoning: Reasoning) {
         self.prompt = prompt
         self.context = context
         self.query = query
