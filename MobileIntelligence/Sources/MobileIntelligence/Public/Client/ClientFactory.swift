@@ -23,11 +23,11 @@
 //
 
 protocol ClientFactory: Actor {
-    func inferenceEngine(forProvider provider: InferenceProvider) -> InferenceEngine
+    func inferenceEngine(forProvider provider: InferenceProvider, model: AIModel) -> InferenceEngine
 }
 
 final actor DefaultClientFactory: ClientFactory {
-    func inferenceEngine(forProvider provider: InferenceProvider) -> InferenceEngine {
+    func inferenceEngine(forProvider provider: InferenceProvider, model: AIModel) -> InferenceEngine {
         return DefaultInferenceEngine(provider: provider)
     }
 }

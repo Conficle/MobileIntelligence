@@ -44,7 +44,7 @@ import MobileIntelligence
 let client = DefaultAIClient()
 let provider = OpenAIProvider()
 
-await client.bootstrapInference(provider)
+await client.bootstrapInference(provider, model: OpenAIModelType.gpt4_1)
 
 let request = PredictionRequest(
     prompt: Prompt(instructions: "Answer clearly and concisely."),
@@ -70,7 +70,7 @@ if #available(iOS 26.0, *) {
     let client = DefaultAIClient()
     let provider = NativeAIProvider()
 
-    await client.bootstrapInference(provider)
+    await client.bootstrapInference(provider, model: NativeModelType.system)
 
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Respond as a helpful mobile assistant."),
