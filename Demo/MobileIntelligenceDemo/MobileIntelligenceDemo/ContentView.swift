@@ -149,7 +149,7 @@ struct ContentView: View {
         do {
             let client = DefaultAIClient()
             let inferenceProvider = try provider.makeInferenceProvider()
-            await client.bootstrapInference(inferenceProvider)
+            await client.bootstrapInference(inferenceProvider, model: NativeModelType.system)
 
             let request = PredictionRequest(
                 prompt: Prompt(instructions: promptText),
