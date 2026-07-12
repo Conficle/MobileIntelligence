@@ -54,6 +54,7 @@ struct OpenAIResponsesResponse: Decodable, Sendable {
             .flatMap(\.content)
             .filter { $0.type == "output_text" }
             .map(\.text)
+            .filter { !$0.isEmpty }
             .joined(separator: "\n")
     }
 

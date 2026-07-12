@@ -159,6 +159,56 @@ import Testing
     #expect(input[0]["content"] as? String == "Say hello")
 }
 
+@Test func openAIProviderMapsDeepReasoningEffortToXHigh() async throws {
+    let recorder = RESTRequestRecorder()
+    let client = MockRESTClient { request in
+        await recorder.record(request)
+
+        let data = Data(
+            """
+            {
+              "output": [
+                {
+                  "type": "message",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "Deep response"
+                    }
+                  ]
+                }
+              ]
+            }
+            """.utf8
+        )
+
+        return try JSONDecoder().decode(OpenAIResponsesResponse.self, from: data)
+    }
+
+    let provider = OpenAIProvider(
+        configuration: OpenAIProvider.Configuration(apiKey: "test-key"),
+        restClient: client
+    )
+
+    await provider.bootstrap(withModel: OpenAIModelType.gpt5_6)
+
+    _ = try await provider.predict(
+        forRequest: PredictionRequest(
+            context: Context(),
+            query: Query(question: "Deep question"),
+            maxTokens: nil,
+            reasoning: .deep
+        )
+    )
+
+    let capturedRequest = try await #require(recorder.firstRequest)
+    let body = try #require(capturedRequest.body)
+    let json = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+    let reasoning = try #require(json["reasoning"] as? [String: Any])
+
+    #expect(reasoning["effort"] as? String == "xhigh")
+}
+
 private actor RESTRequestRecorder {
     private(set) var firstRequest: RESTRequest<OpenAIResponsesResponse>?
 

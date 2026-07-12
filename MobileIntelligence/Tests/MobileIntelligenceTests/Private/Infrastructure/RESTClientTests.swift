@@ -121,6 +121,123 @@ import Testing
     }
 }
 
+@Test func restClientThrowsForStringAPIErrorResponse() async throws {
+    let session = MockHTTPSession { request in
+        let response = HTTPURLResponse(
+            url: try #require(request.url),
+            statusCode: 400,
+            httpVersion: nil,
+            headerFields: nil
+        )
+
+        return (Data(#"{"error":"bad auth"}"#.utf8), try #require(response))
+    }
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "https://api.example.com",
+        session: session
+    )
+
+    do {
+        let request = RESTRequest<TestResponse>(path: "/models")
+        _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.apiError(let statusCode, let message, let data) {
+        #expect(statusCode == 400)
+        #expect(message == "bad auth")
+        #expect(data == Data(#"{"error":"bad auth"}"#.utf8))
+    } catch {
+        Issue.record("Expected RESTError.apiError, received \(error)")
+    }
+}
+
+@Test func restClientThrowsForMessageAPIErrorResponse() async throws {
+    let session = MockHTTPSession { request in
+        let response = HTTPURLResponse(
+            url: try #require(request.url),
+            statusCode: 400,
+            httpVersion: nil,
+            headerFields: nil
+        )
+
+        return (Data(#"{"message":"bad request"}"#.utf8), try #require(response))
+    }
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "https://api.example.com",
+        session: session
+    )
+
+    do {
+        let request = RESTRequest<TestResponse>(path: "/models")
+        _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.apiError(let statusCode, let message, let data) {
+        #expect(statusCode == 400)
+        #expect(message == "bad request")
+        #expect(data == Data(#"{"message":"bad request"}"#.utf8))
+    } catch {
+        Issue.record("Expected RESTError.apiError, received \(error)")
+    }
+}
+
+@Test func restClientThrowsForUnacceptableStatusCodeWithEmptyBody() async throws {
+    let session = MockHTTPSession { request in
+        let response = HTTPURLResponse(
+            url: try #require(request.url),
+            statusCode: 500,
+            httpVersion: nil,
+            headerFields: nil
+        )
+
+        return (Data(), try #require(response))
+    }
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "https://api.example.com",
+        session: session
+    )
+
+    do {
+        let request = RESTRequest<TestResponse>(path: "/models")
+        _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.unacceptableStatusCode(let statusCode, let data) {
+        #expect(statusCode == 500)
+        #expect(data.isEmpty)
+    } catch {
+        Issue.record("Expected RESTError.unacceptableStatusCode, received \(error)")
+    }
+}
+
+@Test func restClientThrowsForInvalidResponseType() async throws {
+    let session = MockHTTPSession { request in
+        let response = URLResponse(
+            url: try #require(request.url),
+            mimeType: nil,
+            expectedContentLength: 0,
+            textEncodingName: nil
+        )
+
+        return (Data(#"{"message":"pong"}"#.utf8), response)
+    }
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "https://api.example.com",
+        session: session
+    )
+
+    do {
+        let request = RESTRequest<TestResponse>(path: "/models")
+        _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.invalidResponse {
+        // Expected
+    } catch {
+        Issue.record("Expected RESTError.invalidResponse, received \(error)")
+    }
+}
+
 @Test func restClientSupportsEmptyResponses() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -142,6 +259,62 @@ import Testing
     let response = try await client.send(request)
 
     #expect(response == EmptyRESTResponse())
+}
+
+@Test func restClientThrowsForEmptyBodyOnNonEmptyResponse() async throws {
+    let session = MockHTTPSession { request in
+        let response = HTTPURLResponse(
+            url: try #require(request.url),
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+
+        return (Data(), try #require(response))
+    }
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "https://api.example.com",
+        session: session
+    )
+
+    do {
+        let request = RESTRequest<TestResponse>(path: "/cache")
+        _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.emptyResponse {
+        // Expected
+    } catch {
+        Issue.record("Expected RESTError.emptyResponse, received \(error)")
+    }
+}
+
+@Test func restClientThrowsInvalidURLForMalformedBaseURL() async throws {
+    let session = MockHTTPSession { request in
+        let response = HTTPURLResponse(
+            url: try #require(request.url),
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+
+        return (Data(), try #require(response))
+    }
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "ht!tp://bad-url",
+        session: session
+    )
+
+    do {
+        let request = RESTRequest<TestResponse>(path: "/test")
+        _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.invalidURL {
+        // Expected
+    } catch {
+        Issue.record("Expected RESTError.invalidURL, received \(error)")
+    }
 }
 
 private struct TestBody: Encodable {

@@ -27,8 +27,7 @@ import FoundationModels
 
 @available(iOS 26.0, *)
 extension NativeAIProvider: AppleInferenceProvider {
-    public func bootstrap(withModel model: any AIModel) async {
-    }
+    public func bootstrap(withModel model: any AIModel) async {}
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         try checkAvailability()
         makeLanguageModelSession(forInstruction: request.prompt?.instructions ?? "")
@@ -41,6 +40,7 @@ extension NativeAIProvider: AppleInferenceProvider {
     }
 
     public func predict<T: Generable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
+        try checkAvailability()
         let session = LanguageModelSession(model: .default, instructions: request.prompt?.instructions ?? "")
         let response = try await session.respond(to: request.query.question, generating: generating)
         return response.content
@@ -50,7 +50,7 @@ extension NativeAIProvider: AppleInferenceProvider {
 @available(iOS 26.0, *)
 private extension NativeAIProvider {
     func checkAvailability() throws {
-        let availability = SystemLanguageModel.default.availability
+        let availability = self.availability
         switch availability {
         case .unavailable(let reason):
             switch reason {
