@@ -15,21 +15,12 @@
 //  limitations under the License.
 //
 
-//
-//  OpenAIProvider.swift
-//  MobileIntelligence
-//
-//  Created by Nitin Bhagwan Manghwani on 05/07/26.
-//
+import Foundation
 
-
-import FoundationModels
-
-@available(iOS 26.0, *)
-public final actor NativeAIProvider: AIProvider {
-    var session: LanguageModelSession?
-
-    public init() {}
-
-    public struct Configuration {}
+enum RESTError: Error, Sendable {
+    case decodingFailed(String)
+    case emptyResponse
+    case invalidResponse
+    case invalidURL
+    case unacceptableStatusCode(Int, Data)
 }

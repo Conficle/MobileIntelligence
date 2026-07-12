@@ -15,21 +15,17 @@
 //  limitations under the License.
 //
 
-//
-//  OpenAIProvider.swift
-//  MobileIntelligence
-//
-//  Created by Nitin Bhagwan Manghwani on 05/07/26.
-//
+enum OpenAIAPIConfiguration {
+    static let responsesPath = "/responses"
 
+    private static let baseURL = "https://api.openai.com/v1"
 
-import FoundationModels
-
-@available(iOS 26.0, *)
-public final actor NativeAIProvider: AIProvider {
-    var session: LanguageModelSession?
-
-    public init() {}
-
-    public struct Configuration {}
+    static func restClientConfiguration(apiKey: String) -> RESTClientConfiguration {
+        RESTClientConfiguration(
+            baseURL: baseURL,
+            defaultHeaders: [
+                "Authorization": "Bearer \(apiKey)"
+            ]
+        )
+    }
 }

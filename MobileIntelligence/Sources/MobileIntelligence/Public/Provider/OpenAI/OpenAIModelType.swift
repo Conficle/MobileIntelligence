@@ -62,6 +62,10 @@ public enum OpenAIModelType: String, AIModel {
     case gpt5_5 = "gpt-5.5"
     case gpt5_5_pro = "gpt-5.5-pro"
 
+    // MARK: - GPT 5.6
+
+    case gpt5_6 = "gpt-5.6"
+
     public var name: String {
         return rawValue
     }

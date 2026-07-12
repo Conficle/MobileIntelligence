@@ -15,21 +15,13 @@
 //  limitations under the License.
 //
 
-//
-//  OpenAIProvider.swift
-//  MobileIntelligence
-//
-//  Created by Nitin Bhagwan Manghwani on 05/07/26.
-//
+struct RESTClientConfiguration: Sendable {
+    let baseURL: String
+    let defaultHeaders: [String: String]
 
-
-import FoundationModels
-
-@available(iOS 26.0, *)
-public final actor NativeAIProvider: AIProvider {
-    var session: LanguageModelSession?
-
-    public init() {}
-
-    public struct Configuration {}
+    init(baseURL: String,
+         defaultHeaders: [String: String] = [:]) {
+        self.baseURL = baseURL
+        self.defaultHeaders = defaultHeaders
+    }
 }

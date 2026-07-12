@@ -22,7 +22,7 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
-public enum Reasoning: Sendable {
+public enum ReasoningEffort: Sendable {
     case low
     case medium
     case high
@@ -35,14 +35,14 @@ public struct PredictionRequest: Sendable {
     let query: Query
     let temperature: Double
     let maxTokens: Int?
-    let reasoning: Reasoning
+    let reasoning: ReasoningEffort
 
     public init(prompt: Prompt,
                 context: Context,
                 query: Query,
                 temperature: Double,
                 maxTokens: Int?,
-                reasoning: Reasoning) {
+                reasoning: ReasoningEffort) {
         self.prompt = prompt
         self.context = context
         self.query = query
