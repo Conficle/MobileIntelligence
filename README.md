@@ -2,7 +2,7 @@
 
 MobileIntelligence is an open-source Swift SDK for adding AI prediction capabilities to iOS applications through a provider-oriented architecture.
 
-The package is designed around small, actor-safe contracts for clients, providers, requests, and responses. It currently includes a native Apple FoundationModels path for supported platforms, plus provider shells for OpenAI and Anthropic integrations.
+The package is designed around small, actor-safe contracts for clients, providers, requests, and responses. It currently includes native Apple inference support via `FoundationModels`, an implemented OpenAI provider, and a scaffolded Anthropic provider.
 
 ## Highlights
 
@@ -42,9 +42,9 @@ Then add the package product to your target:
 import MobileIntelligence
 
 let client = DefaultAIClient()
-let provider = OpenAIProvider()
+let provider = OpenAIProvider(configuration: .init(apiKey: "YOUR_API_KEY"))
 
-await client.bootstrapInference(provider, model: OpenAIModelType.gpt4_1)
+await client.bootstrapInference(provider, model: OpenAIModelType.gpt5_6)
 
 let request = PredictionRequest(
     prompt: Prompt(instructions: "Answer clearly and concisely."),
@@ -86,7 +86,31 @@ if #available(iOS 26.0, *) {
 }
 ```
 
-For typed FoundationModels generation, use the Apple-specific client and provider APIs with `Generable` response types.
+For typed FoundationModels generation, use the Apple-specific client API with `Generable` response types on iOS 26+.
+
+```swift
+import FoundationModels
+import MobileIntelligence
+
+if #available(iOS 26.0, *) {
+    let client = DefaultAIClient()
+    let provider = NativeAIProvider()
+
+    await client.bootstrapInference(provider, model: NativeModelType.system)
+
+    let request = PredictionRequest(
+        prompt: Prompt(instructions: "Answer in a short sentence."),
+        context: Context(),
+        query: Query(question: "What is on-device AI?"),
+        temperature: 0.7,
+        maxTokens: 100,
+        reasoning: .medium
+    )
+
+    let result: String = try await client.predict(forRequest: request, generating: String.self)
+    print(result)
+}
+```
 
 ## Core Concepts
 
@@ -97,6 +121,10 @@ The primary entry point for applications. It owns the inference engine and expos
 ### `InferenceProvider`
 
 The provider contract used by prediction backends. Providers are actors and expose lifecycle and prediction methods.
+
+### `AppleInferenceClient`
+
+An `InferenceClient` extension available on iOS 26+ that supports typed `Generable` prediction outputs.
 
 ### `PredictionRequest`
 
@@ -117,9 +145,9 @@ The normalized response returned from prediction calls. It currently exposes gen
 
 | Provider | Status | Notes |
 | --- | --- | --- |
-| Native Apple | In progress | Uses `FoundationModels` and requires iOS 26+. |
-| OpenAI | Scaffolded | Public provider type and inference contract are present. |
-| Anthropic | Scaffolded | Public provider type and inference contract are present. |
+| Native Apple | Implemented | Uses `FoundationModels`, requires iOS 26+, and supports typed `Generable` output. |
+| OpenAI | Implemented | Uses `OpenAIProvider` with `DefaultRESTClient`; supports `OpenAIModelType` models. |
+| Anthropic | Scaffolded | `AnthropicAIProvider` exists, but inference is currently a placeholder. |
 | Custom | Supported by design | Implement `InferenceProvider` to add your own backend. |
 
 ## Demo App
