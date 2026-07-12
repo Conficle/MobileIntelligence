@@ -15,17 +15,31 @@
 //  limitations under the License.
 //
 
-//
-//  NativeAIProvider.swift
-//  MobileIntelligence
-//
-//  Created by Nitin Bhagwan Manghwani on 05/07/26.
-//
-
 public final actor OpenAIProvider: AIProvider {
-    public init() {}
+    let configuration: Configuration
+    let restClient: any RESTClient
+    var model: any AIModel = OpenAIModelType.gpt5_6
+
+    public init(configuration: OpenAIProvider.Configuration) {
+        self.configuration = configuration
+        self.restClient = DefaultRESTClient(
+            configuration: OpenAIAPIConfiguration.restClientConfiguration(
+                apiKey: configuration.apiKey
+            )
+        )
+    }
+
+    init(configuration: OpenAIProvider.Configuration,
+         restClient: any RESTClient) {
+        self.configuration = configuration
+        self.restClient = restClient
+    }
 
     public struct Configuration {
-        
+        let apiKey: String
+
+        public init(apiKey: String) {
+            self.apiKey = apiKey
+        }
     }
 }
