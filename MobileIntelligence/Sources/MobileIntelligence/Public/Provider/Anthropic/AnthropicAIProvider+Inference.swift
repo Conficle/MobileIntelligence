@@ -23,7 +23,7 @@
 //
 
 extension AnthropicAIProvider: InferenceProvider {
-    public func bootstrap() async {
+    public func bootstrap(withModel model: any AIModel) async {
     }
 
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {

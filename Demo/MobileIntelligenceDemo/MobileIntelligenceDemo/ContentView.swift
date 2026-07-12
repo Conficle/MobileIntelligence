@@ -10,6 +10,9 @@ import MobileIntelligence
 
 struct ContentView: View {
     @AppStorage("selectedAIProvider") private var selectedAIProvider = AIProviderOption.native.rawValue
+    @AppStorage("selectedOpenAIModel") private var selectedOpenAIModel = OpenAIModelType.gpt5_6.rawValue
+    @AppStorage("selectedAnthropicModel") private var selectedAnthropicModel = AnthropicModelType.claude4_5_sonnet.rawValue
+    @AppStorage("openAIAPIKey") private var openAIAPIKey = ""
     @State private var promptText = ""
     @State private var queryText = ""
     @State private var responseText = ""
@@ -21,7 +24,9 @@ struct ContentView: View {
     }
 
     private var canPredict: Bool {
-        !queryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isPredicting
+        !queryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && provider.isConfigured(openAIAPIKey: openAIAPIKey)
+            && !isPredicting
     }
 
     var body: some View {
@@ -61,6 +66,15 @@ struct ContentView: View {
                     Text(provider.displayName)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    Text(provider.selectedModelName(openAIModelID: selectedOpenAIModel,
+                                                    anthropicModelID: selectedAnthropicModel))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if let configurationMessage = provider.configurationMessage(openAIAPIKey: openAIAPIKey) {
+                        Text(configurationMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Spacer()
@@ -148,15 +162,21 @@ struct ContentView: View {
 
         do {
             let client = DefaultAIClient()
-            let inferenceProvider = try provider.makeInferenceProvider()
-            await client.bootstrapInference(inferenceProvider)
+            let inferenceProvider = try provider.makeInferenceProvider(openAIAPIKey: openAIAPIKey)
+            await client.bootstrapInference(
+                inferenceProvider,
+                model: provider.selectedModel(
+                    openAIModelID: selectedOpenAIModel,
+                    anthropicModelID: selectedAnthropicModel
+                )
+            )
 
             let request = PredictionRequest(
                 prompt: Prompt(instructions: promptText),
                 context: Context(),
                 query: Query(question: trimmedQuery),
-                temperature: 0.7,
-                maxTokens: 500,
+                temperature: nil,
+                maxTokens: nil,
                 reasoning: .medium
             )
 
@@ -172,6 +192,9 @@ struct ContentView: View {
 
 struct SettingsView: View {
     @AppStorage("selectedAIProvider") private var selectedAIProvider = AIProviderOption.native.rawValue
+    @AppStorage("selectedOpenAIModel") private var selectedOpenAIModel = OpenAIModelType.gpt5_6.rawValue
+    @AppStorage("selectedAnthropicModel") private var selectedAnthropicModel = AnthropicModelType.claude4_5_sonnet.rawValue
+    @AppStorage("openAIAPIKey") private var openAIAPIKey = ""
 
     var body: some View {
         Form {
@@ -184,9 +207,53 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.inline)
             }
+
+            modelSection
+
+            if selectedAIProvider == AIProviderOption.openAI.rawValue {
+                Section("OpenAI") {
+                    SecureField("API Key", text: $openAIAPIKey)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+
+                    Text("The key is stored locally for the demo app and used to configure OpenAIProvider.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    @ViewBuilder
+    private var modelSection: some View {
+        switch AIProviderOption(rawValue: selectedAIProvider) ?? .native {
+        case .native:
+            Section("Model") {
+                LabeledContent("Model", value: NativeModelType.system.name)
+            }
+        case .openAI:
+            Section("Model") {
+                Picker("Model", selection: $selectedOpenAIModel) {
+                    ForEach(DemoModelCatalog.openAI, id: \.rawValue) { model in
+                        Text(model.name)
+                            .tag(model.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+        case .anthropic:
+            Section("Model") {
+                Picker("Model", selection: $selectedAnthropicModel) {
+                    ForEach(DemoModelCatalog.anthropic, id: \.rawValue) { model in
+                        Text(model.name)
+                            .tag(model.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+        }
     }
 }
 
@@ -219,7 +286,40 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
         }
     }
 
-    func makeInferenceProvider() throws -> any InferenceProvider {
+    func selectedModel(openAIModelID: String, anthropicModelID: String) -> any AIModel {
+        switch self {
+        case .native:
+            NativeModelType.system
+        case .openAI:
+            OpenAIModelType(rawValue: openAIModelID) ?? .gpt5_6
+        case .anthropic:
+            AnthropicModelType(rawValue: anthropicModelID) ?? .claude4_5_sonnet
+        }
+    }
+
+    func selectedModelName(openAIModelID: String, anthropicModelID: String) -> String {
+        selectedModel(openAIModelID: openAIModelID, anthropicModelID: anthropicModelID).name
+    }
+
+    func isConfigured(openAIAPIKey: String) -> Bool {
+        switch self {
+        case .native, .anthropic:
+            true
+        case .openAI:
+            !openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    func configurationMessage(openAIAPIKey: String) -> String? {
+        switch self {
+        case .native, .anthropic:
+            nil
+        case .openAI:
+            isConfigured(openAIAPIKey: openAIAPIKey) ? nil : "Add an OpenAI API key in Settings."
+        }
+    }
+
+    func makeInferenceProvider(openAIAPIKey: String) throws -> any InferenceProvider {
         switch self {
         case .native:
             if #available(iOS 26.0, *) {
@@ -228,11 +328,50 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
                 throw PredictionDemoError.providerUnavailable("Native provider requires iOS 26 or later.")
             }
         case .openAI:
-            return OpenAIProvider()
+            let apiKey = openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !apiKey.isEmpty else {
+                throw PredictionDemoError.providerUnavailable("OpenAI API key is required.")
+            }
+            return OpenAIProvider(configuration: .init(apiKey: apiKey))
         case .anthropic:
             return AnthropicAIProvider()
         }
     }
+}
+
+private enum DemoModelCatalog {
+    static let openAI: [OpenAIModelType] = [
+        .gpt5_6,
+        .gpt5_5,
+        .gpt5_5_pro,
+        .gpt5_4,
+        .gpt5_4_pro,
+        .gpt5_4_mini,
+        .gpt5_4_nano,
+        .gpt5_2,
+        .gpt5_1,
+        .gpt5,
+        .gpt5_pro,
+        .gpt5_mini,
+        .gpt5_nano,
+        .gpt4_1,
+        .gpt4_1_mini,
+        .gpt4_1_nano
+    ]
+
+    static let anthropic: [AnthropicModelType] = [
+        .claude4_5_sonnet,
+        .claude4_5_opus,
+        .claude4_sonnet,
+        .claude4_opus,
+        .claude4_haiku,
+        .claude3_7_sonnet,
+        .claude3_5_sonnet,
+        .claude3_5_haiku,
+        .claude3_opus,
+        .claude3_sonnet,
+        .claude3_haiku
+    ]
 }
 
 private enum PredictionDemoError: LocalizedError {

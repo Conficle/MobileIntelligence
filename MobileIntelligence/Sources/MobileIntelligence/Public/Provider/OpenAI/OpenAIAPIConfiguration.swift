@@ -15,14 +15,17 @@
 //  limitations under the License.
 //
 
-//
-//  InferenceClient.swift
-//  MobileIntelligence
-//
-//  Created by Nitin Bhagwan Manghwani on 04/07/26.
-//
+enum OpenAIAPIConfiguration {
+    static let responsesPath = "/responses"
 
-public protocol InferenceClient: Actor {
-    func bootstrapInference(_ inferenceProvider: InferenceProvider, model: AIModel) async
-    func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
+    private static let baseURL = "https://api.openai.com/v1"
+
+    static func restClientConfiguration(apiKey: String) -> RESTClientConfiguration {
+        RESTClientConfiguration(
+            baseURL: baseURL,
+            defaultHeaders: [
+                "Authorization": "Bearer \(apiKey)"
+            ]
+        )
+    }
 }
