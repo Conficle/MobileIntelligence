@@ -30,17 +30,17 @@ public enum ReasoningEffort: Sendable {
 }
 
 public struct PredictionRequest: Sendable {
-    let prompt: Prompt
+    let prompt: Prompt?
     let context: Context
     let query: Query
-    let temperature: Double
+    let temperature: Double?
     let maxTokens: Int?
     let reasoning: ReasoningEffort
 
-    public init(prompt: Prompt,
+    public init(prompt: Prompt? = nil,
                 context: Context,
                 query: Query,
-                temperature: Double,
+                temperature: Double? = nil,
                 maxTokens: Int?,
                 reasoning: ReasoningEffort) {
         self.prompt = prompt

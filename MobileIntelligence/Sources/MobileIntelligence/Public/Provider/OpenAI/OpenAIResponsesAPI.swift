@@ -19,7 +19,7 @@ struct OpenAIResponsesRequest: Encodable, Sendable {
     let model: String
     let reasoning: Reasoning
     let input: [Message]
-    let temperature: Double
+    let temperature: Double?
     let maxOutputTokens: Int?
 
     enum CodingKeys: String, CodingKey {

@@ -79,9 +79,45 @@ import Testing
         session: session
     )
 
-    await #expect(throws: RESTError.self) {
+    do {
         let request = RESTRequest<TestResponse>(path: "/models")
         _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.apiError(let statusCode, let message, let data) {
+        #expect(statusCode == 401)
+        #expect(message == "unauthorized")
+        #expect(data == Data(#"{"error":"unauthorized"}"#.utf8))
+    } catch {
+        Issue.record("Expected RESTError.apiError, received \(error)")
+    }
+}
+
+@Test func restClientThrowsNestedAPIErrorMessage() async throws {
+    let session = MockHTTPSession { request in
+        let response = HTTPURLResponse(
+            url: try #require(request.url),
+            statusCode: 400,
+            httpVersion: nil,
+            headerFields: nil
+        )
+
+        return (Data(#"{"error":{"message":"Invalid model requested","type":"invalid_request_error"}}"#.utf8), try #require(response))
+    }
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "https://api.example.com",
+        session: session
+    )
+
+    do {
+        let request = RESTRequest<TestResponse>(path: "/responses")
+        _ = try await client.send(request)
+        Issue.record("Expected request to throw")
+    } catch RESTError.apiError(let statusCode, let message, _) {
+        #expect(statusCode == 400)
+        #expect(message == "Invalid model requested")
+    } catch {
+        Issue.record("Expected RESTError.apiError, received \(error)")
     }
 }
 

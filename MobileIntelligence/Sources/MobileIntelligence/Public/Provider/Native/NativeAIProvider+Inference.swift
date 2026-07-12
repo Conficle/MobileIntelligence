@@ -30,16 +30,18 @@ extension NativeAIProvider: AppleInferenceProvider {
     public func bootstrap(withModel model: any AIModel) async {
     }
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
-        let availability = SystemLanguageModel.default.availability
-        makeLanguageModelSession(forInstruction: request.prompt.instructions)
-        guard let response = try await session?.respond(to: request.query.question) else {
-            throw CoreError.predictionFailed
+        try checkAvailability()
+        makeLanguageModelSession(forInstruction: request.prompt?.instructions ?? "")
+        do {
+            let response = try await session?.respond(to: request.query.question)
+            return PredictionResponse(content: response?.content ?? "")
+        } catch {
+            throw error
         }
-        return PredictionResponse(content: response.content)
     }
 
     public func predict<T: Generable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
-        let session = LanguageModelSession(model: .default, instructions: request.prompt.instructions)
+        let session = LanguageModelSession(model: .default, instructions: request.prompt?.instructions ?? "")
         let response = try await session.respond(to: request.query.question, generating: generating)
         return response.content
     }
@@ -47,6 +49,24 @@ extension NativeAIProvider: AppleInferenceProvider {
 
 @available(iOS 26.0, *)
 private extension NativeAIProvider {
+    func checkAvailability() throws {
+        let availability = SystemLanguageModel.default.availability
+        switch availability {
+        case .unavailable(let reason):
+            switch reason {
+            case .modelNotReady:
+                throw NativeProviderError.modelNotReady
+            case .appleIntelligenceNotEnabled:
+                throw NativeProviderError.appleIntelligenceNotEnabled
+            case .deviceNotEligible:
+                throw NativeProviderError.deviceNotEligible
+            @unknown default:
+                throw NativeProviderError.unknown
+            }
+        case .available:
+            return
+        }
+    }
     @discardableResult
     func makeLanguageModelSession(forInstruction instruction: String) -> LanguageModelSession {
         if let session {

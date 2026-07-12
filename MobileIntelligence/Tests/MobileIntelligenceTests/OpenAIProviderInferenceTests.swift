@@ -110,6 +110,55 @@ import Testing
     }
 }
 
+@Test func openAIProviderOmitsOptionalPromptAndTemperature() async throws {
+    let recorder = RESTRequestRecorder()
+    let client = MockRESTClient { request in
+        await recorder.record(request)
+
+        let data = Data("""
+        {
+          "output": [
+            {
+              "type": "message",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "Hello"
+                }
+              ]
+            }
+          ]
+        }
+        """.utf8)
+
+        return try JSONDecoder().decode(OpenAIResponsesResponse.self, from: data)
+    }
+
+    let provider = OpenAIProvider(
+        configuration: OpenAIProvider.Configuration(apiKey: "test-key"),
+        restClient: client
+    )
+
+    _ = try await provider.predict(
+        forRequest: PredictionRequest(
+            context: Context(),
+            query: Query(question: "Say hello"),
+            maxTokens: nil,
+            reasoning: .low
+        )
+    )
+
+    let capturedRequest = try await #require(recorder.firstRequest)
+    let body = try #require(capturedRequest.body)
+    let json = try #require(JSONSerialization.jsonObject(with: body) as? [String: Any])
+    let input = try #require(json["input"] as? [[String: Any]])
+
+    #expect(json["temperature"] == nil)
+    #expect(input.count == 1)
+    #expect(input[0]["role"] as? String == "user")
+    #expect(input[0]["content"] as? String == "Say hello")
+}
+
 private actor RESTRequestRecorder {
     private(set) var firstRequest: RESTRequest<OpenAIResponsesResponse>?
 

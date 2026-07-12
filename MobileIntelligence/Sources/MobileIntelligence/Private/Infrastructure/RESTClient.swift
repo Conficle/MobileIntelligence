@@ -63,7 +63,7 @@ actor DefaultRESTClient: RESTClient {
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw RESTError.unacceptableStatusCode(httpResponse.statusCode, data)
+            throw makeAPIError(statusCode: httpResponse.statusCode, data: data)
         }
 
         if Response.self == EmptyRESTResponse.self, data.isEmpty {
@@ -139,4 +139,56 @@ actor DefaultRESTClient: RESTClient {
 
         return url
     }
+
+    private func makeAPIError(statusCode: Int, data: Data) -> RESTError {
+        if let message = decodeAPIErrorMessage(from: data), !message.isEmpty {
+            return .apiError(statusCode: statusCode, message: message, data: data)
+        }
+
+        guard let body = String(data: data, encoding: .utf8), !body.isEmpty else {
+            return .unacceptableStatusCode(statusCode, data)
+        }
+
+        return .apiError(statusCode: statusCode, message: body, data: data)
+    }
+
+    private func decodeAPIErrorMessage(from data: Data) -> String? {
+        guard !data.isEmpty else {
+            return nil
+        }
+
+        if let response = try? decoder.decode(APIErrorResponse.self, from: data) {
+            return response.message
+        }
+
+        if let response = try? decoder.decode(APIStringErrorResponse.self, from: data) {
+            return response.error
+        }
+
+        if let response = try? decoder.decode(APIMessageResponse.self, from: data) {
+            return response.message
+        }
+
+        return nil
+    }
+}
+
+private struct APIErrorResponse: Decodable {
+    let error: APIError
+
+    var message: String {
+        error.message
+    }
+
+    struct APIError: Decodable {
+        let message: String
+    }
+}
+
+private struct APIStringErrorResponse: Decodable {
+    let error: String
+}
+
+private struct APIMessageResponse: Decodable {
+    let message: String
 }

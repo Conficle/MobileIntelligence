@@ -18,9 +18,29 @@
 import Foundation
 
 enum RESTError: Error, Sendable {
+    case apiError(statusCode: Int, message: String, data: Data)
     case decodingFailed(String)
     case emptyResponse
     case invalidResponse
     case invalidURL
     case unacceptableStatusCode(Int, Data)
+}
+
+extension RESTError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .apiError(_, let message, _):
+            return message
+        case .decodingFailed(let message):
+            return message
+        case .emptyResponse:
+            return "Response body was empty"
+        case .invalidResponse:
+            return "Invalid response"
+        case .invalidURL:
+            return "Invalid URL"
+        case .unacceptableStatusCode(let statusCode, _):
+            return "Request failed with status code \(statusCode)"
+        }
+    }
 }
