@@ -23,11 +23,73 @@
 //
 
 extension OpenAIProvider: InferenceProvider {
-    public func bootstrap() async {
-        
+    public func bootstrap(withModel model: any AIModel) async {
+        self.model = model
     }
 
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
-        return PredictionResponse()
+        do {
+            let response = try await restClient.send(makeResponsesRequest(for: request))
+            let content = response.outputText
+
+            guard !content.isEmpty else {
+                throw CoreError.predictionFailed
+            }
+            return PredictionResponse(content: content)
+        }
+        catch {
+            throw error
+        }
+    }
+}
+
+private extension OpenAIProvider {
+    func makeResponsesRequest(for request: PredictionRequest) throws -> RESTRequest<OpenAIResponsesResponse> {
+        var input = [OpenAIResponsesRequest.Message]()
+
+        if let instructions = request.prompt?.instructions, !instructions.isEmpty {
+            input.append(
+                OpenAIResponsesRequest.Message(
+                    role: .developer,
+                    content: instructions
+                )
+            )
+        }
+
+        input.append(
+            OpenAIResponsesRequest.Message(
+                role: .user,
+                content: request.query.question
+            )
+        )
+
+        let body = OpenAIResponsesRequest(
+            model: model.name,
+            reasoning: OpenAIResponsesRequest.Reasoning(effort: request.reasoning.openAIValue),
+            input: input,
+            temperature: request.temperature,
+            maxOutputTokens: request.maxTokens
+        )
+
+        return try RESTRequest(
+            path: OpenAIAPIConfiguration.responsesPath,
+            method: .post,
+            jsonBody: body
+        )
+    }
+}
+
+private extension ReasoningEffort {
+    var openAIValue: String {
+        switch self {
+        case .low:
+            return "low"
+        case .medium:
+            return "medium"
+        case .high:
+            return "high"
+        case .deep:
+            return "xhigh"
+        }
     }
 }

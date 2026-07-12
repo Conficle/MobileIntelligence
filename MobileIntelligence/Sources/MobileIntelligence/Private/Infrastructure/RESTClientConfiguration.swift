@@ -15,14 +15,13 @@
 //  limitations under the License.
 //
 
-//
-//  InferenceClient.swift
-//  MobileIntelligence
-//
-//  Created by Nitin Bhagwan Manghwani on 04/07/26.
-//
+struct RESTClientConfiguration: Sendable {
+    let baseURL: String
+    let defaultHeaders: [String: String]
 
-public protocol InferenceClient: Actor {
-    func bootstrapInference(_ inferenceProvider: InferenceProvider, model: AIModel) async
-    func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
+    init(baseURL: String,
+         defaultHeaders: [String: String] = [:]) {
+        self.baseURL = baseURL
+        self.defaultHeaders = defaultHeaders
+    }
 }

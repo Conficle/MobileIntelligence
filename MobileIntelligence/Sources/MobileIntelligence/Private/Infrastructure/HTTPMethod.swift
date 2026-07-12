@@ -15,14 +15,10 @@
 //  limitations under the License.
 //
 
-//
-//  InferenceClient.swift
-//  MobileIntelligence
-//
-//  Created by Nitin Bhagwan Manghwani on 04/07/26.
-//
-
-public protocol InferenceClient: Actor {
-    func bootstrapInference(_ inferenceProvider: InferenceProvider, model: AIModel) async
-    func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
+enum HTTPMethod: String, Sendable {
+    case delete = "DELETE"
+    case get = "GET"
+    case patch = "PATCH"
+    case post = "POST"
+    case put = "PUT"
 }

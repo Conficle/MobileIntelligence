@@ -24,7 +24,7 @@
 //
 
 protocol InferenceEngine: Actor {
-    func bootstrapInferenceProvider() async
+    func bootstrapInferenceProvider(withModel model: AIModel) async
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }
 
@@ -35,7 +35,8 @@ final actor DefaultInferenceEngine: InferenceEngine {
         self.provider = provider
     }
 
-    func bootstrapInferenceProvider() async {
+    func bootstrapInferenceProvider(withModel model: AIModel) async {
+        await provider.bootstrap(withModel: model)
     }
 
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {

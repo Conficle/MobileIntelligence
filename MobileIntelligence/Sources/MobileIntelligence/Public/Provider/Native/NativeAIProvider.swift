@@ -28,9 +28,17 @@ import FoundationModels
 @available(iOS 26.0, *)
 public final actor NativeAIProvider: AIProvider {
     var session: LanguageModelSession?
+    internal var availabilityOverride: SystemLanguageModel.Availability?
+
+    internal var availability: SystemLanguageModel.Availability {
+        return availabilityOverride ?? SystemLanguageModel.default.availability
+    }
+
+    internal func setAvailabilityOverride(_ override: SystemLanguageModel.Availability?) {
+        availabilityOverride = override
+    }
 
     public init() {}
 
-    public struct Configuration {
-    }
+    public struct Configuration {}
 }
