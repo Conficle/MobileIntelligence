@@ -11,6 +11,7 @@ The package is designed around small, actor-safe contracts for clients, provider
 - Native Apple inference support using `FoundationModels` on supported iOS versions.
 - Typed prediction requests with prompt instructions, query text, context, token limits, temperature, and reasoning level.
 - Lightweight response model for returning generated content.
+- Request-level prediction caching to avoid re-running identical provider/model requests.
 - Demo SwiftUI app for exercising provider selection and prediction flow.
 
 ## Requirements
@@ -58,6 +59,32 @@ let request = PredictionRequest(
 let response = try await client.predict(forRequest: request)
 print(response.content)
 ```
+
+## Prediction Caching
+
+MobileIntelligence now caches successful predictions before delegating to the underlying provider. The cache is implemented at the shared inference-engine layer, so it applies consistently across supported providers.
+
+### What is cached
+
+A prediction is cached based on a deterministic signature that includes:
+
+- provider identity
+- selected model name
+- prompt instructions
+- user query
+- temperature
+- max token limit
+- reasoning effort
+- context fingerprint
+
+### How it works
+
+- The cache is actor-safe and in-memory.
+- Requests are keyed with a versioned SHA-256 hash generated from the canonical request payload.
+- If an identical request is issued again, the cached response is returned immediately without invoking the provider.
+- The cache is currently ephemeral for the lifetime of the app process.
+
+This is especially useful for repeated prompts and interactive flows where the same input is asked more than once.
 
 ## Native Apple Inference
 
@@ -117,6 +144,8 @@ if #available(iOS 26.0, *) {
 ### `DefaultAIClient`
 
 The primary entry point for applications. It owns the inference engine and exposes prediction APIs through `InferenceClient`.
+
+The default client factory shares an in-memory prediction cache across inference engines, allowing repeated requests to reuse prior responses when the request signature matches.
 
 ### `InferenceProvider`
 
@@ -195,6 +224,7 @@ Demo/
 - Add richer context handling.
 - Add structured response helpers.
 - Add provider authentication configuration.
+- Add persistence, TTL, and eviction policies for the prediction cache.
 - Add stronger unit and integration test coverage.
 
 ## License
