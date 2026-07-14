@@ -23,11 +23,18 @@
 //
 
 extension DefaultAIClient {
+    /// Configures the client with an inference provider and model.
+    /// - Parameters:
+    ///   - inferenceProvider: The provider used for future predictions.
+    ///   - model: The selected model used by the provider.
     public func bootstrapInference(_ inferenceProvider: any InferenceProvider, model: AIModel) async {
         inferenceEnginge = await clientFactory.inferenceEngine(forProvider: inferenceProvider, model: model)
         await inferenceEnginge?.bootstrapInferenceProvider(withModel: model)
     }
     
+    /// Produces a prediction through the configured inference engine.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The prediction response.
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         guard let response = try await inferenceEnginge?.predict(forRequest: request) else {
             throw CoreError.predictionFailed

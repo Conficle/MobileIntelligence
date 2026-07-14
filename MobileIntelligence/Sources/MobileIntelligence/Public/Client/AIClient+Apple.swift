@@ -26,6 +26,11 @@ import FoundationModels
 
 @available(iOS 26.0, *)
 extension DefaultAIClient: AppleInferenceClient {
+    /// Produces a typed Apple FoundationModels response through the configured engine.
+    /// - Parameters:
+    ///   - request: The prediction request to execute.
+    ///   - generating: The expected generated response type.
+    /// - Returns: The typed generated response.
     public func predict<T: Generable & Sendable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
         guard let response = try await (inferenceEnginge as? AppleInferenceEngine)?.predict(forRequest: request, generating: generating) else {
             throw CoreError.predictionFailed

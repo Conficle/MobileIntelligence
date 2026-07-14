@@ -26,6 +26,11 @@ import FoundationModels
 
 @available(iOS 26.0, *)
 extension DefaultInferenceEngine {
+    /// Delegates typed Apple generation requests to an Apple-capable provider.
+    /// - Parameters:
+    ///   - request: The prediction request to execute.
+    ///   - generating: The expected generated response type.
+    /// - Returns: The typed generated response.
     func predict<T: Generable & Sendable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
         guard let response = try await (provider as? AppleInferenceProvider)?.predict(forRequest: request, generating: generating) else {
             throw CoreError.predictionFailed

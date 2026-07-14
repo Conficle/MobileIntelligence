@@ -22,17 +22,22 @@
 //  Created by Nitin Bhagwan Manghwani on 28/06/26.
 //
 
+/// Public client interface for MobileIntelligence features.
 public protocol AIClient: Actor, InferenceClient {
 }
 
+/// Default actor-backed implementation of the public AI client.
 public final actor DefaultAIClient: AIClient {
     var inferenceEnginge: InferenceEngine?
     let clientFactory: ClientFactory
 
+    /// Creates a client using the default client factory.
     public init() {
         self.clientFactory = DefaultClientFactory()
     }
 
+    /// Creates a client with a custom factory for tests or alternate wiring.
+    /// - Parameter clientFactory: The factory used to create internal collaborators.
     init(clientFactory: ClientFactory) {
         self.clientFactory = clientFactory
     }

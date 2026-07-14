@@ -19,6 +19,7 @@ import Foundation
 import Testing
 @testable import MobileIntelligence
 
+/// Verifies the placeholder Anthropic provider returns an empty prediction.
 @Test func anthropicProviderReturnsEmptyPredictionByDefault() async throws {
     let provider = AnthropicAIProvider()
 
@@ -28,6 +29,7 @@ import Testing
     #expect(response.content == "")
 }
 
+/// Verifies Anthropic model raw values and exposed names.
 @Test func anthropicModelTypeRawValuesAndNamesMatchExpected() async throws {
     #expect(AnthropicModelType.claude3_opus.rawValue == "claude-3-opus")
     #expect(AnthropicModelType.claude3_opus.name == "claude-3-opus")
@@ -39,12 +41,15 @@ import Testing
     #expect(AnthropicModelType.claude3_5_sonnet.name == "claude-3-5-sonnet")
 }
 
+/// Verifies invalid Anthropic raw values do not create model types.
 @Test func anthropicModelTypeRawValueInitializationReturnsNilForInvalidValue() async throws {
     let modelType = AnthropicModelType(rawValue: "claude-unknown")
 
     #expect(modelType == nil)
 }
 
+/// Creates a reusable prediction request for Anthropic provider tests.
+/// - Returns: A prediction request shared by Anthropic tests.
 private func makeTestRequest() -> PredictionRequest {
     PredictionRequest(
         prompt: Prompt(instructions: "Be helpful."),
@@ -55,6 +60,7 @@ private func makeTestRequest() -> PredictionRequest {
     )
 }
 
+/// Test model implementation with a configurable name.
 private struct TestModel: AIModel {
     let name: String
 }

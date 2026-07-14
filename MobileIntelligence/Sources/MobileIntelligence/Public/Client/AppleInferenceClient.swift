@@ -25,6 +25,12 @@
 import FoundationModels
 
 @available(iOS 26.0, *)
+/// Client capabilities for typed Apple FoundationModels generation.
 public protocol AppleInferenceClient: InferenceClient {
+    /// Produces a typed generated response for the request.
+    /// - Parameters:
+    ///   - request: The prediction request to execute.
+    ///   - generating: The expected generated response type.
+    /// - Returns: The typed generated response.
     func predict<T: Generable & Sendable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T
 }

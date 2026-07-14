@@ -24,17 +24,21 @@
 
 import XCTest
 
+/// UI launch screenshot test suite for the demo app.
 final class MobileIntelligenceDemoUITestsLaunchTests: XCTestCase {
 
+    /// Indicates that launch tests run for each UI configuration.
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }
 
+    /// Prepares each launch test.
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
     @MainActor
+    /// Launches the app and captures a launch screenshot attachment.
     func testLaunch() throws {
         let app = XCUIApplication()
         app.launch()

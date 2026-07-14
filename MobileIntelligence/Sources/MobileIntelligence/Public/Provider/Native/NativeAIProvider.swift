@@ -26,19 +26,26 @@
 import FoundationModels
 
 @available(iOS 26.0, *)
+/// Native Apple FoundationModels inference provider.
 public final actor NativeAIProvider: AIProvider {
     var session: LanguageModelSession?
     internal var availabilityOverride: SystemLanguageModel.Availability?
 
+    /// Current system model availability, optionally overridden for tests.
+    /// - Returns: The active system model availability.
     internal var availability: SystemLanguageModel.Availability {
         return availabilityOverride ?? SystemLanguageModel.default.availability
     }
 
+    /// Overrides system model availability for tests.
+    /// - Parameter override: Optional availability value to use instead of the system value.
     internal func setAvailabilityOverride(_ override: SystemLanguageModel.Availability?) {
         availabilityOverride = override
     }
 
+    /// Creates a native Apple inference provider.
     public init() {}
 
+    /// Configuration for native provider setup.
     public struct Configuration {}
 }

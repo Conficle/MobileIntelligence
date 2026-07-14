@@ -25,6 +25,12 @@
 import FoundationModels
 
 @available(iOS 26.0, *)
+/// Provider abstraction for typed Apple FoundationModels generation.
 public protocol AppleInferenceProvider: InferenceProvider {
+    /// Produces a typed generated response for the request.
+    /// - Parameters:
+    ///   - request: The prediction request to execute.
+    ///   - generating: The expected generated response type.
+    /// - Returns: The typed generated response.
     func predict<T: Generable & Sendable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T
 }

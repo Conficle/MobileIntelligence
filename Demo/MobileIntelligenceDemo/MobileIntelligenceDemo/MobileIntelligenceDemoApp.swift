@@ -25,7 +25,9 @@
 import SwiftUI
 
 @main
+/// Entry point for the MobileIntelligence demo app.
 struct MobileIntelligenceDemoApp: App {
+    /// Root scene for the demo app.
     var body: some Scene {
         WindowGroup {
             ContentView()

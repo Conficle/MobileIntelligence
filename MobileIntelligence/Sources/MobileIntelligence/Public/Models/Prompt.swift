@@ -23,9 +23,12 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
+/// System-level instructions supplied with a prediction request.
 public struct Prompt: Sendable {
     public let instructions: String
 
+    /// Creates prompt instructions.
+    /// - Parameter instructions: System instructions or behavior guidance.
     public init(instructions: String = "") {
         self.instructions = instructions
     }

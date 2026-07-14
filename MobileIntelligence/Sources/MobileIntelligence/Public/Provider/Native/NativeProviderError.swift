@@ -22,12 +22,15 @@
 //  Created by Nitin Bhagwan Manghwani on 12/07/26.
 //
 
+/// Errors produced by the native Apple provider.
 public enum NativeProviderError: Error, MobileIntelligenceError {
     case deviceNotEligible
     case appleIntelligenceNotEnabled
     case modelNotReady
     case unknown
     
+    /// Stable error code.
+    /// - Returns: The numeric code for the native provider error.
     public var code: Int {
         switch self {
         case .deviceNotEligible:
@@ -41,6 +44,8 @@ public enum NativeProviderError: Error, MobileIntelligenceError {
         }
     }
     
+    /// Human-readable error message.
+    /// - Returns: The message describing the native provider error.
     public var message: String {
         switch self {
         case .deviceNotEligible:

@@ -22,6 +22,7 @@
 //  Created by Nitin Bhagwan Manghwani on 28/06/26.
 //
 
+/// Supported provider families.
 public enum ProviderType: Sendable {
     case openAI
     case anthropic

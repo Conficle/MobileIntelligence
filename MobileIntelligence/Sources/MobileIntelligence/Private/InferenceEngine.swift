@@ -23,16 +23,29 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
+/// Coordinates model bootstrapping and prediction execution for an inference provider.
 protocol InferenceEngine: Actor {
+    /// Prepares the underlying provider with the selected model.
+    /// - Parameter model: The model to use for future predictions.
     func bootstrapInferenceProvider(withModel model: AIModel) async
+
+    /// Produces a prediction response for the request.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The prediction response produced by the provider or cache.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }
 
+/// Default inference engine that adds caching before delegating to a provider.
 final actor DefaultInferenceEngine: InferenceEngine {
     let provider: InferenceProvider
     let cache: PredictionCache
     private var modelName: String
 
+    /// Creates an inference engine with a provider, optional model, and prediction cache.
+    /// - Parameters:
+    ///   - provider: The provider used when a request is not cached.
+    ///   - model: The selected model used to key cached responses.
+    ///   - cache: The prediction cache used before provider calls.
     init(provider: InferenceProvider,
          model: AIModel? = nil,
          cache: PredictionCache = InMemoryPredictionCache()) {
@@ -41,11 +54,16 @@ final actor DefaultInferenceEngine: InferenceEngine {
         self.modelName = model?.name ?? "unconfigured"
     }
 
+    /// Stores the selected model and bootstraps the provider.
+    /// - Parameter model: The model to use for future predictions.
     func bootstrapInferenceProvider(withModel model: AIModel) async {
         modelName = model.name
         await provider.bootstrap(withModel: model)
     }
 
+    /// Returns a cached prediction when available, otherwise calls the provider.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The cached or newly generated prediction response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         let key = try PredictionCacheKey(
             provider: String(describing: type(of: provider)),

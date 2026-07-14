@@ -22,6 +22,7 @@
 //  Created by Nitin Bhagwan Manghwani on 05/07/26.
 //
 
+/// Anthropic model identifiers supported by the package.
 public enum AnthropicModelType: String, AIModel {
 
         // MARK: - Claude 3
@@ -50,6 +51,8 @@ public enum AnthropicModelType: String, AIModel {
         case claude4_5_opus = "claude-4.5-opus"
         case claude4_5_sonnet = "claude-4.5-sonnet"
 
+        /// Provider-specific model name.
+        /// - Returns: The Anthropic model identifier.
         public var name: String {
             return rawValue
         }
