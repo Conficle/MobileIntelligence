@@ -1,3 +1,20 @@
+//  MobileIntelligence
+//
+//  Copyright (c) 2026 Nitin Manghwani
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
+
 //
 //  ContentView.swift
 //  MobileIntelligenceDemo
@@ -8,6 +25,7 @@
 import SwiftUI
 import MobileIntelligence
 
+/// Main demo screen for entering prompts, queries, and viewing predictions.
 struct ContentView: View {
     @AppStorage("selectedAIProvider") private var selectedAIProvider = AIProviderOption.native.rawValue
     @AppStorage("selectedOpenAIModel") private var selectedOpenAIModel = OpenAIModelType.gpt5_6.rawValue
@@ -19,16 +37,19 @@ struct ContentView: View {
     @State private var errorMessage: String?
     @State private var isPredicting = false
 
+    /// Currently selected provider option.
     private var provider: AIProviderOption {
         AIProviderOption(rawValue: selectedAIProvider) ?? .native
     }
 
+    /// Indicates whether the current UI state can start a prediction.
     private var canPredict: Bool {
         !queryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && provider.isConfigured(openAIAPIKey: openAIAPIKey)
             && !isPredicting
     }
 
+    /// Root view content for the prediction demo.
     var body: some View {
         NavigationStack {
             List {
@@ -52,6 +73,7 @@ struct ContentView: View {
         }
     }
 
+    /// Displays the currently selected provider and model.
     private var providerSection: some View {
         Section {
             HStack(spacing: 12) {
@@ -83,6 +105,7 @@ struct ContentView: View {
         }
     }
 
+    /// Displays the system prompt editor.
     private var promptSection: some View {
         Section("Prompt") {
             TextEditor(text: $promptText)
@@ -100,6 +123,7 @@ struct ContentView: View {
         }
     }
 
+    /// Displays the user query editor.
     private var querySection: some View {
         Section("User Query") {
             TextEditor(text: $queryText)
@@ -117,6 +141,7 @@ struct ContentView: View {
         }
     }
 
+    /// Displays the prediction action button.
     private var actionSection: some View {
         Section {
             Button {
@@ -137,6 +162,7 @@ struct ContentView: View {
         }
     }
 
+    /// Displays the latest prediction response or error.
     private var responseSection: some View {
         Section("Prediction Response") {
             if let errorMessage {
@@ -152,6 +178,7 @@ struct ContentView: View {
         }
     }
 
+    /// Builds and sends a prediction request from the current UI state.
     private func getPrediction() async {
         let trimmedQuery = queryText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else { return }
@@ -190,12 +217,14 @@ struct ContentView: View {
     }
 }
 
+/// Settings screen for selecting providers, models, and credentials.
 struct SettingsView: View {
     @AppStorage("selectedAIProvider") private var selectedAIProvider = AIProviderOption.native.rawValue
     @AppStorage("selectedOpenAIModel") private var selectedOpenAIModel = OpenAIModelType.gpt5_6.rawValue
     @AppStorage("selectedAnthropicModel") private var selectedAnthropicModel = AnthropicModelType.claude4_5_sonnet.rawValue
     @AppStorage("openAIAPIKey") private var openAIAPIKey = ""
 
+    /// Root view content for demo settings.
     var body: some View {
         Form {
             Section("AI Provider") {
@@ -227,6 +256,7 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
+    /// Displays provider-specific model selection controls.
     private var modelSection: some View {
         switch AIProviderOption(rawValue: selectedAIProvider) ?? .native {
         case .native:
@@ -257,13 +287,16 @@ struct SettingsView: View {
     }
 }
 
+/// Provider choices available in the demo app.
 private enum AIProviderOption: String, CaseIterable, Identifiable {
     case native
     case openAI
     case anthropic
 
+    /// Stable identifier used by SwiftUI lists and pickers.
     var id: String { rawValue }
 
+    /// Display name shown in the demo UI.
     var displayName: String {
         switch self {
         case .native:
@@ -275,6 +308,7 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// SF Symbol name shown in the demo UI.
     var symbolName: String {
         switch self {
         case .native:
@@ -286,6 +320,7 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Resolves the selected provider-specific model.
     func selectedModel(openAIModelID: String, anthropicModelID: String) -> any AIModel {
         switch self {
         case .native:
@@ -297,10 +332,12 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Resolves the selected provider-specific model name.
     func selectedModelName(openAIModelID: String, anthropicModelID: String) -> String {
         selectedModel(openAIModelID: openAIModelID, anthropicModelID: anthropicModelID).name
     }
 
+    /// Indicates whether the provider has enough configuration to run.
     func isConfigured(openAIAPIKey: String) -> Bool {
         switch self {
         case .native, .anthropic:
@@ -310,6 +347,7 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Returns a configuration warning message when the provider is not ready.
     func configurationMessage(openAIAPIKey: String) -> String? {
         switch self {
         case .native, .anthropic:
@@ -319,6 +357,7 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Creates an inference provider for the selected option.
     func makeInferenceProvider(openAIAPIKey: String) throws -> any InferenceProvider {
         switch self {
         case .native:
@@ -339,6 +378,7 @@ private enum AIProviderOption: String, CaseIterable, Identifiable {
     }
 }
 
+/// Model lists used by the demo model pickers.
 private enum DemoModelCatalog {
     static let openAI: [OpenAIModelType] = [
         .gpt5_6,
@@ -374,9 +414,11 @@ private enum DemoModelCatalog {
     ]
 }
 
+/// Errors surfaced by the demo app before prediction starts.
 private enum PredictionDemoError: LocalizedError {
     case providerUnavailable(String)
 
+    /// User-facing error description.
     var errorDescription: String? {
         switch self {
         case .providerUnavailable(let message):

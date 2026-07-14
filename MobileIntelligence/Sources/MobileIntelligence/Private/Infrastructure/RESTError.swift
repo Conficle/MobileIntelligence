@@ -17,6 +17,7 @@
 
 import Foundation
 
+/// Represents failures produced while building, sending, or decoding REST requests.
 enum RESTError: Error, Sendable {
     case apiError(statusCode: Int, message: String, data: Data)
     case decodingFailed(String)
@@ -26,7 +27,10 @@ enum RESTError: Error, Sendable {
     case unacceptableStatusCode(Int, Data)
 }
 
+/// Provides user-facing descriptions for REST failures.
 extension RESTError: LocalizedError {
+    /// A localized message describing the REST failure.
+    /// - Returns: The localized error description.
     var errorDescription: String? {
         switch self {
         case .apiError(_, let message, _):

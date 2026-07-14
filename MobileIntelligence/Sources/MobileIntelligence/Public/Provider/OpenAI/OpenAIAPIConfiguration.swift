@@ -15,11 +15,15 @@
 //  limitations under the License.
 //
 
+/// Constants and helpers for OpenAI API requests.
 enum OpenAIAPIConfiguration {
     static let responsesPath = "/responses"
 
     private static let baseURL = "https://api.openai.com/v1"
 
+    /// Builds REST client configuration for OpenAI APIs.
+    /// - Parameter apiKey: API key used to authenticate OpenAI requests.
+    /// - Returns: REST client configuration for OpenAI.
     static func restClientConfiguration(apiKey: String) -> RESTClientConfiguration {
         RESTClientConfiguration(
             baseURL: baseURL,

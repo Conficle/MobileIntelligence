@@ -27,7 +27,13 @@ import FoundationModels
 
 @available(iOS 26.0, *)
 extension NativeAIProvider: AppleInferenceProvider {
+    /// Prepares the native provider with the selected model.
+    /// - Parameter model: The model to use for future native predictions.
     public func bootstrap(withModel model: any AIModel) async {}
+
+    /// Produces a text prediction using Apple FoundationModels.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The prediction response.
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         try checkAvailability()
         makeLanguageModelSession(forInstruction: request.prompt?.instructions ?? "")
@@ -39,6 +45,11 @@ extension NativeAIProvider: AppleInferenceProvider {
         }
     }
 
+    /// Produces a typed generated response using Apple FoundationModels.
+    /// - Parameters:
+    ///   - request: The prediction request to execute.
+    ///   - generating: The expected generated response type.
+    /// - Returns: The typed generated response.
     public func predict<T: Generable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
         try checkAvailability()
         let session = LanguageModelSession(model: .default, instructions: request.prompt?.instructions ?? "")
@@ -49,6 +60,7 @@ extension NativeAIProvider: AppleInferenceProvider {
 
 @available(iOS 26.0, *)
 private extension NativeAIProvider {
+    /// Verifies that the system language model is available for inference.
     func checkAvailability() throws {
         let availability = self.availability
         switch availability {
@@ -67,6 +79,10 @@ private extension NativeAIProvider {
             return
         }
     }
+
+    /// Creates or reuses a language model session for the given instructions.
+    /// - Parameter instruction: Instructions used when creating a new session.
+    /// - Returns: The existing or newly created language model session.
     @discardableResult
     func makeLanguageModelSession(forInstruction instruction: String) -> LanguageModelSession {
         if let session {

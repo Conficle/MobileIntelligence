@@ -19,6 +19,7 @@ import Foundation
 import Testing
 @testable import MobileIntelligence
 
+/// Verifies localized descriptions for each REST error case.
 @Test func restErrorLocalizedDescriptionsMatchCases() {
     let decodingFailed = RESTError.decodingFailed("Broken")
     #expect(decodingFailed.errorDescription == "Broken")

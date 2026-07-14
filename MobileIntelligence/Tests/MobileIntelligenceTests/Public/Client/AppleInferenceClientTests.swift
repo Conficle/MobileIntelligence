@@ -20,24 +20,41 @@ import Testing
 @testable import MobileIntelligence
 
 @available(iOS 26.0, *)
+/// Test inference engine for Apple client prediction tests.
 private actor TestInferenceEngine: InferenceEngine {
     let response = PredictionResponse(content: "apple client ok")
 
+    /// Accepts a bootstrap call for test setup.
+    /// - Parameter model: The model passed to bootstrap.
     func bootstrapInferenceProvider(withModel model: AIModel) async {}
 
+    /// Returns a fixed prediction response.
+    /// - Parameter request: The prediction request passed to the engine.
+    /// - Returns: A fixed prediction response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return response
     }
 }
 
 @available(iOS 26.0, *)
+/// Stub Apple inference engine that supports typed generation.
 private actor StubAppleInferenceEngine: AppleInferenceEngine {
+    /// Accepts a bootstrap call for test setup.
+    /// - Parameter model: The model passed to bootstrap.
     func bootstrapInferenceProvider(withModel model: AIModel) async {}
 
+    /// Returns a fixed prediction response.
+    /// - Parameter request: The prediction request passed to the engine.
+    /// - Returns: A fixed prediction response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return PredictionResponse(content: "apple client ok")
     }
 
+    /// Returns a generated string when requested.
+    /// - Parameters:
+    ///   - request: The prediction request passed to the engine.
+    ///   - generating: The expected generated response type.
+    /// - Returns: A generated response of the requested type.
     func predict<T: Generable & Sendable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
         if T.self == String.self {
             return "apple generable" as! T
@@ -47,6 +64,7 @@ private actor StubAppleInferenceEngine: AppleInferenceEngine {
 }
 
 @available(iOS 26.0, *)
+/// Verifies that the default client can predict through an actor-backed engine.
 @Test func defaultAIClientPredictsThroughConfiguredInferenceEngineWithActorStub() async throws {
     let engine = TestInferenceEngine()
     let client = DefaultAIClient(clientFactory: StubClientFactory(engine: engine))
@@ -58,6 +76,7 @@ private actor StubAppleInferenceEngine: AppleInferenceEngine {
 }
 
 @available(iOS 26.0, *)
+/// Verifies that the default client can use Apple typed generation.
 @Test func defaultAIClientPredictsUsingAppleInferenceClient() async throws {
     let client = DefaultAIClient(clientFactory: StubClientFactory(engine: StubAppleInferenceEngine()))
     await client.bootstrapInference(MockProvider(), model: NativeModelType.system)
@@ -69,28 +88,44 @@ private actor StubAppleInferenceEngine: AppleInferenceEngine {
     #expect(response == "apple generable")
 }
 
+/// Test model implementation with a configurable name.
 private struct TestModel: AIModel {
     let name: String
 }
 
 @available(iOS 26.0, *)
+/// Mock provider used to bootstrap Apple client tests.
 private actor MockProvider: InferenceProvider {
     var mockResponse: PredictionResponse?
+
+    /// Accepts a bootstrap call for test setup.
+    /// - Parameter model: The model passed to bootstrap.
     func bootstrap(withModel model: any AIModel) async {}
     
+    /// Returns the configured mock response or an empty response.
+    /// - Parameter request: The prediction request passed to the provider.
+    /// - Returns: The configured mock response or an empty response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return mockResponse ?? PredictionResponse()
     }
 }
 
 @available(iOS 26.0, *)
+/// Stub factory that returns a fixed inference engine.
 private actor StubClientFactory: ClientFactory {
     private let engine: any InferenceEngine
 
+    /// Creates a factory with a fixed engine.
+    /// - Parameter engine: The engine returned by the factory.
     init(engine: any InferenceEngine) {
         self.engine = engine
     }
 
+    /// Returns the fixed engine.
+    /// - Parameters:
+    ///   - provider: The provider passed to the factory.
+    ///   - model: The model passed to the factory.
+    /// - Returns: The fixed inference engine.
     func inferenceEngine(forProvider provider: any InferenceProvider, model: AIModel) -> any InferenceEngine {
         return engine
     }

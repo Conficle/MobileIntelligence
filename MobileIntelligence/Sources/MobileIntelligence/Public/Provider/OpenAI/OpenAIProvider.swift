@@ -15,11 +15,14 @@
 //  limitations under the License.
 //
 
+/// OpenAI-backed inference provider.
 public final actor OpenAIProvider: AIProvider {
     let configuration: Configuration
     let restClient: any RESTClient
     var model: any AIModel = OpenAIModelType.gpt5_6
 
+    /// Creates an OpenAI provider using the default REST client.
+    /// - Parameter configuration: Configuration containing the OpenAI API key.
     public init(configuration: OpenAIProvider.Configuration) {
         self.configuration = configuration
         self.restClient = DefaultRESTClient(
@@ -29,15 +32,22 @@ public final actor OpenAIProvider: AIProvider {
         )
     }
 
+    /// Creates an OpenAI provider with a custom REST client for tests or alternate transport.
+    /// - Parameters:
+    ///   - configuration: Configuration containing the OpenAI API key.
+    ///   - restClient: REST client used to send OpenAI requests.
     init(configuration: OpenAIProvider.Configuration,
          restClient: any RESTClient) {
         self.configuration = configuration
         self.restClient = restClient
     }
 
+    /// Configuration required to call OpenAI APIs.
     public struct Configuration {
         let apiKey: String
 
+        /// Creates OpenAI provider configuration.
+        /// - Parameter apiKey: API key used to authenticate OpenAI requests.
         public init(apiKey: String) {
             self.apiKey = apiKey
         }

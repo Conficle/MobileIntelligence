@@ -19,6 +19,7 @@ import Foundation
 import Testing
 @testable import MobileIntelligence
 
+/// Verifies that missing OpenAI content fields decode to safe defaults.
 @Test func openAIResponsesResponseUsesDefaultValuesForMissingContentFields() throws {
     let data = Data(
         """
@@ -44,6 +45,7 @@ import Testing
     #expect(response.outputText == "")
 }
 
+/// Verifies that OpenAI request bodies encode developer and user messages.
 @Test func openAIResponsesRequestEncodesDeveloperAndUserMessages() throws {
     let request = OpenAIResponsesRequest(
         model: "gpt-5.6",

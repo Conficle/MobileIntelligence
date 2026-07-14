@@ -1,5 +1,22 @@
+//  MobileIntelligence
 //
-//  File.swift
+//  Copyright (c) 2026 Nitin Manghwani
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
+
+//
+//  InferenceEngine+Apple.swift
 //  MobileIntelligence
 //
 //  Created by Nitin Bhagwan Manghwani on 05/07/26.
@@ -9,6 +26,11 @@ import FoundationModels
 
 @available(iOS 26.0, *)
 extension DefaultInferenceEngine {
+    /// Delegates typed Apple generation requests to an Apple-capable provider.
+    /// - Parameters:
+    ///   - request: The prediction request to execute.
+    ///   - generating: The expected generated response type.
+    /// - Returns: The typed generated response.
     func predict<T: Generable & Sendable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
         guard let response = try await (provider as? AppleInferenceProvider)?.predict(forRequest: request, generating: generating) else {
             throw CoreError.predictionFailed

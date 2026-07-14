@@ -19,21 +19,25 @@ import Foundation
 import Testing
 @testable import MobileIntelligence
 
+/// Verifies that prompts default to empty instructions.
 @Test func promptInitializesWithDefaultInstructions() {
     let prompt = Prompt()
     #expect(prompt.instructions == "")
 }
 
+/// Verifies that prompts store custom instructions.
 @Test func promptInitializesWithCustomInstructions() {
     let prompt = Prompt(instructions: "Be concise.")
     #expect(prompt.instructions == "Be concise.")
 }
 
+/// Verifies that queries store their question text.
 @Test func queryInitializesWithQuestion() {
     let query = Query(question: "What is the best language?")
     #expect(query.question == "What is the best language?")
 }
 
+/// Verifies that prediction requests retain all initializer values.
 @Test func predictionRequestStoresAllValues() {
     let prompt = Prompt(instructions: "Answer briefly.")
     let context = Context()
@@ -54,16 +58,19 @@ import Testing
     #expect(request.reasoning == .medium)
 }
 
+/// Verifies that prediction responses default to empty content.
 @Test func predictionResponseDefaultContentIsEmpty() {
     let response = PredictionResponse()
     #expect(response.content == "")
 }
 
+/// Verifies that prediction responses store provided content.
 @Test func predictionResponseStoresProvidedContent() {
     let response = PredictionResponse(content: "Hello world")
     #expect(response.content == "Hello world")
 }
 
+/// Verifies core error codes and messages.
 @Test func coreErrorCodeAndMessageValuesAreCorrect() {
     let invalidConfiguration = CoreError.invalidProviderConfiguration
     #expect(invalidConfiguration.code == 1001)
@@ -74,12 +81,14 @@ import Testing
     #expect(predictionFailed.message == "Prediction failed")
 }
 
+/// Verifies that provider type cases are distinct.
 @Test func providerTypeCasesAreDistinct() {
     #expect(ProviderType.openAI != ProviderType.anthropic)
     #expect(ProviderType.anthropic != ProviderType.native)
     #expect(ProviderType.openAI != ProviderType.native)
 }
 
+/// Verifies that OpenAI responses extract text content.
 @Test func openAIResponsesResponseExtractsOutputText() throws {
     let data = Data(
         """
@@ -103,6 +112,7 @@ import Testing
     #expect(response.outputText == "Hello")
 }
 
+/// Verifies that OpenAI response extraction ignores irrelevant output blocks.
 @Test func openAIResponsesResponseIgnoresNonMessageOutputAndEmptyText() throws {
     let data = Data(
         """
