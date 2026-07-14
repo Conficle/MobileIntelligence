@@ -55,7 +55,8 @@ import Testing
             .init(role: .user, content: "Hello")
         ],
         temperature: 0.7,
-        maxOutputTokens: 128
+        maxOutputTokens: 128,
+        stream: false
     )
 
     let data = try JSONEncoder().encode(request)

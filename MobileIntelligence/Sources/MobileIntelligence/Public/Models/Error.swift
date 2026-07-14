@@ -35,6 +35,7 @@ public protocol MobileIntelligenceError {
 
 /// Core package errors.
 public enum CoreError: Error, MobileIntelligenceError {
+    case invalidSession
     case invalidProviderConfiguration
     case predictionFailed
 
@@ -46,6 +47,8 @@ public enum CoreError: Error, MobileIntelligenceError {
             return 1001
         case .predictionFailed:
             return 1002
+        case .invalidSession:
+            return 1003
         }
     }
 
@@ -57,6 +60,8 @@ public enum CoreError: Error, MobileIntelligenceError {
             return "Invalid provider configuration"
         case .predictionFailed:
             return "Prediction failed"
+        case .invalidSession:
+            return "Invalid session"
         }
     }
 }

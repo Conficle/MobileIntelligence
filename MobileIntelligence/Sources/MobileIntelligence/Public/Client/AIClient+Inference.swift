@@ -41,4 +41,11 @@ extension DefaultAIClient {
         }
         return response
     }
+
+    public func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        guard let stream = try await inferenceEnginge?.stream(for: request) else {
+            throw CoreError.predictionFailed
+        }
+        return stream
+    }
 }

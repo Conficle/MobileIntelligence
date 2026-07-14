@@ -31,6 +31,7 @@ struct ContentView: View {
     @AppStorage("selectedOpenAIModel") private var selectedOpenAIModel = OpenAIModelType.gpt5_6.rawValue
     @AppStorage("selectedAnthropicModel") private var selectedAnthropicModel = AnthropicModelType.claude4_5_sonnet.rawValue
     @AppStorage("openAIAPIKey") private var openAIAPIKey = ""
+    @AppStorage("useStreaming") private var useStreaming = false
     @State private var promptText = ""
     @State private var queryText = ""
     @State private var responseText = ""
@@ -48,6 +49,7 @@ struct ContentView: View {
             && provider.isConfigured(openAIAPIKey: openAIAPIKey)
             && !isPredicting
     }
+    let client = DefaultAIClient()
 
     /// Root view content for the prediction demo.
     var body: some View {
@@ -179,6 +181,7 @@ struct ContentView: View {
     }
 
     /// Builds and sends a prediction request from the current UI state.
+    @MainActor
     private func getPrediction() async {
         let trimmedQuery = queryText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else { return }
@@ -188,7 +191,6 @@ struct ContentView: View {
         responseText = ""
 
         do {
-            let client = DefaultAIClient()
             let inferenceProvider = try provider.makeInferenceProvider(openAIAPIKey: openAIAPIKey)
             await client.bootstrapInference(
                 inferenceProvider,
@@ -207,8 +209,22 @@ struct ContentView: View {
                 reasoning: .medium
             )
 
-            let response = try await client.predict(forRequest: request)
-            responseText = response.content.isEmpty ? "PredictionResponse received." : response.content
+            if useStreaming {
+                let stream = try await client.stream(for: request)
+                for try await event in stream {
+                    switch event {
+                    case .started:
+                        responseText = ""
+                    case .textDelta(let delta):
+                        responseText += delta
+                    case .completed(let streamedResponse):
+                        responseText = streamedResponse.content.isEmpty ? "PredictionResponse received." : streamedResponse.content
+                    }
+                }
+            } else {
+                let response = try await client.predict(forRequest: request)
+                responseText = response.content.isEmpty ? "PredictionResponse received." : response.content
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -223,6 +239,7 @@ struct SettingsView: View {
     @AppStorage("selectedOpenAIModel") private var selectedOpenAIModel = OpenAIModelType.gpt5_6.rawValue
     @AppStorage("selectedAnthropicModel") private var selectedAnthropicModel = AnthropicModelType.claude4_5_sonnet.rawValue
     @AppStorage("openAIAPIKey") private var openAIAPIKey = ""
+    @AppStorage("useStreaming") private var useStreaming = false
 
     /// Root view content for demo settings.
     var body: some View {
@@ -235,6 +252,13 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.inline)
+            }
+
+            Section("Streaming") {
+                Toggle("Enable streaming", isOn: $useStreaming)
+                Text("When enabled, the demo app uses the selected provider's streaming API and shows responses progressively.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             modelSection

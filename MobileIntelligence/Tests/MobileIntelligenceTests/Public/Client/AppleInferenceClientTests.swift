@@ -34,6 +34,13 @@ private actor TestInferenceEngine: InferenceEngine {
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return response
     }
+
+    func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(.completed(response))
+            continuation.finish()
+        }
+    }
 }
 
 @available(iOS 26.0, *)
@@ -60,6 +67,14 @@ private actor StubAppleInferenceEngine: AppleInferenceEngine {
             return "apple generable" as! T
         }
         throw CoreError.predictionFailed
+    }
+
+    func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(.textDelta("apple generable"))
+            continuation.yield(.completed(PredictionResponse(content: "apple generable")))
+            continuation.finish()
+        }
     }
 }
 
@@ -107,6 +122,14 @@ private actor MockProvider: InferenceProvider {
     /// - Returns: The configured mock response or an empty response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return mockResponse ?? PredictionResponse()
+    }
+
+    func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        AsyncThrowingStream { continuation in
+            let response = mockResponse ?? PredictionResponse()
+            continuation.yield(.completed(response))
+            continuation.finish()
+        }
     }
 }
 

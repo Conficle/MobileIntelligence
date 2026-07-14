@@ -34,4 +34,10 @@ extension AnthropicAIProvider: InferenceProvider {
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return PredictionResponse()
     }
+
+    public func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        return AsyncThrowingStream<InferenceStreamEvent, Error> { continuation in
+            continuation.finish()
+        }
+    }
 }

@@ -15,6 +15,8 @@
 //  limitations under the License.
 //
 
+import Foundation
+
 //
 //  OpenAIProvider+Inference.swift
 //  MobileIntelligence
@@ -46,13 +48,38 @@ extension OpenAIProvider: InferenceProvider {
             throw error
         }
     }
+
+    public func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, any Error> {
+        let apiRequest = try makeResponsesRequest(for: request, stream: true)
+        let bytes = try await restClient.stream(apiRequest)
+        return AsyncThrowingStream { continuation in
+            Task { [weak self] in
+                guard let self else {
+                    continuation.finish(throwing: CoreError.invalidSession)
+                    return
+                }
+                do {
+                    for try await line in bytes.lines {
+                        let event = try self.decoder.decode(from: line)
+                        guard let sdkEvent = OpenAIStreamEventMapper.map(event) else {
+                            continue
+                        }
+                        continuation.yield(sdkEvent)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
 }
 
 private extension OpenAIProvider {
     /// Builds an OpenAI Responses API REST request from a prediction request.
     /// - Parameter request: The prediction request to convert.
     /// - Returns: A REST request targeting the OpenAI Responses API.
-    func makeResponsesRequest(for request: PredictionRequest) throws -> RESTRequest<OpenAIResponsesResponse> {
+    func makeResponsesRequest(for request: PredictionRequest, stream: Bool = false) throws -> RESTRequest<OpenAIResponsesResponse> {
         var input = [OpenAIResponsesRequest.Message]()
 
         if let instructions = request.prompt?.instructions, !instructions.isEmpty {
@@ -76,7 +103,8 @@ private extension OpenAIProvider {
             reasoning: OpenAIResponsesRequest.Reasoning(effort: request.reasoning.openAIValue),
             input: input,
             temperature: request.temperature,
-            maxOutputTokens: request.maxTokens
+            maxOutputTokens: request.maxTokens,
+            stream: stream
         )
 
         return try RESTRequest(

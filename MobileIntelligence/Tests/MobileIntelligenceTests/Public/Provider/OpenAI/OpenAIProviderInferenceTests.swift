@@ -249,4 +249,8 @@ private final class MockRESTClient: RESTClient, @unchecked Sendable {
 
         return response
     }
+
+    func stream<Response: Decodable & Sendable>(_ request: RESTRequest<Response>) async throws -> URLSession.AsyncBytes {
+        throw CoreError.predictionFailed
+    }
 }
