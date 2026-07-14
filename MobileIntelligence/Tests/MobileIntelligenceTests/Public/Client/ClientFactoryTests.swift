@@ -27,6 +27,36 @@ import Testing
     #expect(engine is DefaultInferenceEngine)
 }
 
+@Test func defaultClientFactorySharesCacheAcrossEngines() async throws {
+    let cache = InMemoryPredictionCache()
+    let firstFactory = DefaultClientFactory(cache: cache)
+    let secondFactory = DefaultClientFactory(cache: cache)
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "factory cached"))
+    let request = PredictionRequest(
+        prompt: Prompt(instructions: "Cache through factory."),
+        context: Context(),
+        query: Query(question: "Use the same cache across engines."),
+        maxTokens: 64,
+        reasoning: .high
+    )
+
+    let firstEngine = await firstFactory.inferenceEngine(
+        forProvider: provider,
+        model: TestModel(name: "factory-cache-demo")
+    )
+    let secondEngine = await secondFactory.inferenceEngine(
+        forProvider: provider,
+        model: TestModel(name: "factory-cache-demo")
+    )
+
+    let firstResponse = try await firstEngine.predict(forRequest: request)
+    let secondResponse = try await secondEngine.predict(forRequest: request)
+
+    #expect(firstResponse.content == "factory cached")
+    #expect(secondResponse.content == "factory cached")
+    #expect(await provider.predictionRequests.count == 1)
+}
+
 @Test func defaultInferenceEngineBootstrapsAndPredictsThroughProvider() async throws {
     let provider = StubInferenceProvider(result: PredictionResponse(content: "engine ok"))
     let engine = DefaultInferenceEngine(provider: provider)
@@ -39,6 +69,86 @@ import Testing
     #expect(await provider.predictionRequests.count == 1)
 }
 
+@Test func defaultInferenceEngineReturnsCachedResponseForSameRequest() async throws {
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "fresh"))
+    let cache = InMemoryPredictionCache()
+    let engine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: cache
+    )
+
+    let firstResponse = try await engine.predict(forRequest: makeTestRequest())
+    let secondResponse = try await engine.predict(forRequest: makeTestRequest())
+
+    #expect(firstResponse.content == "fresh")
+    #expect(secondResponse.content == "fresh")
+    #expect(await provider.predictionRequests.count == 1)
+}
+
+@Test func defaultInferenceEngineUsesDifferentCacheKeysForDifferentModels() async throws {
+    let request = makeTestRequest()
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "fresh"))
+    let cache = InMemoryPredictionCache()
+    let firstEngine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: cache
+    )
+    let secondEngine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo-mini"),
+        cache: cache
+    )
+
+    _ = try await firstEngine.predict(forRequest: request)
+    _ = try await secondEngine.predict(forRequest: request)
+
+    #expect(await provider.predictionRequests.count == 2)
+}
+
+@Test func defaultInferenceEngineUsesDifferentCacheKeysForDifferentRequests() async throws {
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "fresh"))
+    let cache = InMemoryPredictionCache()
+    let engine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: cache
+    )
+
+    _ = try await engine.predict(forRequest: makeTestRequest())
+    _ = try await engine.predict(
+        forRequest: PredictionRequest(
+            prompt: Prompt(instructions: "Be helpful."),
+            context: Context(),
+            query: Query(question: "Hello!"),
+            maxTokens: 32,
+            reasoning: .medium
+        )
+    )
+
+    #expect(await provider.predictionRequests.count == 2)
+}
+
+@Test func defaultInferenceEngineDoesNotCacheProviderFailures() async throws {
+    let provider = StubInferenceProvider(error: CoreError.predictionFailed)
+    let engine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: InMemoryPredictionCache()
+    )
+
+    await #expect(throws: CoreError.self) {
+        _ = try await engine.predict(forRequest: makeTestRequest())
+    }
+
+    await #expect(throws: CoreError.self) {
+        _ = try await engine.predict(forRequest: makeTestRequest())
+    }
+
+    #expect(await provider.predictionRequests.count == 2)
+}
+
 @Test func defaultAIClientPredictsThroughConfiguredInferenceEngine() async throws {
     let engine = StubInferenceEngine(response: PredictionResponse(content: "client ok"))
     let factory = StubClientFactory(engine: engine)
@@ -49,6 +159,7 @@ import Testing
     let response = try await client.predict(forRequest: makeTestRequest())
 
     #expect(response.content == "client ok")
+    #expect(await engine.bootstrappedModel?.name == "demo")
     #expect(await engine.receivedRequest != nil)
 }
 
@@ -83,9 +194,11 @@ private actor StubInferenceProvider: InferenceProvider {
     private(set) var bootstrappedModel: (any AIModel)?
     private(set) var predictionRequests: [PredictionRequest] = []
     private let result: PredictionResponse?
+    private let error: Error?
 
-    init(result: PredictionResponse? = nil) {
+    init(result: PredictionResponse? = nil, error: Error? = nil) {
         self.result = result
+        self.error = error
     }
 
     func bootstrap(withModel model: any AIModel) async {
@@ -94,12 +207,16 @@ private actor StubInferenceProvider: InferenceProvider {
 
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         predictionRequests.append(request)
+        if let error {
+            throw error
+        }
         return result ?? PredictionResponse(content: "provider ok")
     }
 }
 
 private actor StubInferenceEngine: InferenceEngine {
     private let response: PredictionResponse
+    private(set) var bootstrappedModel: (any AIModel)?
     private(set) var receivedRequest: PredictionRequest?
 
     init(response: PredictionResponse) {
@@ -107,7 +224,7 @@ private actor StubInferenceEngine: InferenceEngine {
     }
 
     func bootstrapInferenceProvider(withModel model: AIModel) async {
-        _ = model
+        bootstrappedModel = model
     }
 
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
@@ -151,5 +268,6 @@ private actor StubClientFactory: ClientFactory {
     let response = try await client.predict(forRequest: makeTestRequest())
 
     #expect(response.content == "client ok")
+    #expect(await engine.bootstrappedModel?.name == "demo")
     #expect(await engine.receivedRequest != nil)
 }
