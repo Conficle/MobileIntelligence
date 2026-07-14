@@ -63,6 +63,105 @@ import Testing
     #expect(capturedRequest.httpBody == Data(#"{"message":"ping"}"#.utf8))
 }
 
+/// Verifies that streaming requests use the injected session implementation.
+@Test func restClientUsesInjectedSessionForStreaming() async throws {
+    let recorder = RequestRecorder()
+    let session = MockHTTPSession(
+        dataHandler: { request in
+            await recorder.record(request)
+
+            let response = HTTPURLResponse(
+                url: try #require(request.url),
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil
+            )
+
+            return (Data(), try #require(response))
+        },
+        bytesHandler: { request, _ in
+            await recorder.record(request)
+            throw TestStreamingError.sentinel
+        }
+    )
+
+    let client: any RESTClient = DefaultRESTClient(
+        baseURL: "https://api.example.com",
+        session: session
+    )
+
+    do {
+        _ = try await client.stream(RESTRequest<TestResponse>(path: "/stream"))
+        Issue.record("Expected streaming request to throw")
+    } catch TestStreamingError.sentinel {
+        let capturedRequest = try await #require(recorder.firstRequest)
+        #expect(capturedRequest.url?.absoluteString == "https://api.example.com/stream")
+    } catch {
+        Issue.record("Expected TestStreamingError.sentinel, received \(error)")
+    }
+}
+
+/// Verifies that successful streaming responses return their bytes.
+@Test func restClientReturnsStreamingBytesForSuccessfulResponse() async throws {
+    let session = MockHTTPSession(
+        dataHandler: { _ in
+            throw TestStreamingError.sentinel
+        },
+        bytesHandler: { request, _ in
+            let response = HTTPURLResponse(
+                url: try #require(request.url),
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil
+            )
+
+            let bytes = try await makeAsyncBytes(from: Data([0x48, 0x69]))
+            return (bytes, try #require(response))
+        }
+    )
+
+    let client: any RESTClient = DefaultRESTClient(baseURL: "https://api.example.com", session: session)
+    let bytes = try await client.stream(RESTRequest<TestResponse>(path: "/stream"))
+
+    var chunkCount = 0
+    for try await _ in bytes {
+        chunkCount += 1
+    }
+
+    #expect(chunkCount == 2)
+}
+
+/// Verifies that non-HTTP streaming responses are rejected.
+@Test func restClientRejectsNonHTTPStreamingResponses() async throws {
+    let session = MockHTTPSession(
+        dataHandler: { _ in
+            throw TestStreamingError.sentinel
+        },
+        bytesHandler: { request, _ in
+            let response = URLResponse(
+                url: try #require(request.url),
+                mimeType: nil,
+                expectedContentLength: 0,
+                textEncodingName: nil
+            )
+
+            let bytes = try await makeAsyncBytes(from: Data())
+            return (bytes, response)
+        }
+    )
+
+    let client: any RESTClient = DefaultRESTClient(baseURL: "https://api.example.com", session: session)
+
+    do {
+        _ = try await client.stream(RESTRequest<TestResponse>(path: "/stream"))
+        Issue.record("Expected streaming request to throw")
+    } catch RESTError.invalidResponse {
+        // Expected
+    } catch {
+        Issue.record("Expected RESTError.invalidResponse, received \(error)")
+    }
+}
+
 /// Verifies that unsuccessful HTTP status codes produce API errors.
 @Test func restClientThrowsForUnsuccessfulStatusCode() async throws {
     let session = MockHTTPSession { request in
@@ -332,6 +431,21 @@ private struct TestBody: Encodable {
     let message: String
 }
 
+private enum TestStreamingError: Error, Equatable {
+    case sentinel
+}
+
+private func makeAsyncBytes(from data: Data) async throws -> URLSession.AsyncBytes {
+    let tempDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+    let fileURL = tempDirectory.appendingPathComponent("stream.bin")
+    try data.write(to: fileURL)
+
+    let request = URLRequest(url: fileURL)
+    let (bytes, _) = try await URLSession.shared.bytes(for: request)
+    return bytes
+}
+
 /// Decodable response body used by REST client tests.
 private struct TestResponse: Decodable, Equatable, Sendable {
     let message: String
@@ -348,20 +462,40 @@ private actor RequestRecorder {
     }
 }
 
-/// Mock HTTP session backed by a supplied request handler.
+/// Mock HTTP session backed by supplied request handlers.
 private final class MockHTTPSession: HTTPSession, @unchecked Sendable {
-    private let handler: @Sendable (URLRequest) async throws -> (Data, URLResponse)
+    private let dataHandler: @Sendable (URLRequest) async throws -> (Data, URLResponse)
+    private let bytesHandler: @Sendable (URLRequest, (any URLSessionTaskDelegate)?) async throws -> (URLSession.AsyncBytes, URLResponse)
 
-    /// Creates a mock session with a request handler.
+    /// Creates a mock session with a shared request handler.
     /// - Parameter handler: The handler used to produce data and responses.
     init(handler: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse)) {
-        self.handler = handler
+        self.dataHandler = handler
+        self.bytesHandler = { _, _ in
+            throw RESTError.invalidResponse
+        }
     }
 
-    /// Handles a URL request using the supplied handler.
+    /// Creates a mock session with separate handlers for data and streaming requests.
+    init(
+        dataHandler: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse),
+        bytesHandler: @escaping @Sendable (URLRequest, (any URLSessionTaskDelegate)?) async throws -> (URLSession.AsyncBytes, URLResponse)
+    ) {
+        self.dataHandler = dataHandler
+        self.bytesHandler = bytesHandler
+    }
+
+    /// Handles a URL request using the supplied data handler.
     /// - Parameter request: The URL request to handle.
     /// - Returns: The data and URL response produced by the handler.
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        try await handler(request)
+        try await dataHandler(request)
+    }
+
+    /// Handles a streaming URL request using the supplied bytes handler.
+    /// - Parameter request: The URL request to handle.
+    /// - Returns: The async bytes stream and URL response produced by the handler.
+    func bytes(for request: URLRequest, delegate: (any URLSessionTaskDelegate)?) async throws -> (URLSession.AsyncBytes, URLResponse) {
+        try await bytesHandler(request, delegate)
     }
 }

@@ -33,6 +33,8 @@ protocol InferenceEngine: Actor {
     /// - Parameter request: The prediction request to execute.
     /// - Returns: The prediction response produced by the provider or cache.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
+
+    func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error>
 }
 
 /// Default inference engine that adds caching before delegating to a provider.
@@ -78,5 +80,61 @@ final actor DefaultInferenceEngine: InferenceEngine {
         let response = try await provider.predict(forRequest: request)
         await cache.store(response, for: key)
         return response
+    }
+
+    public func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        let key = try PredictionCacheKey(provider: String(describing: type(of: provider)),
+                                         model: self.modelName,
+                                         request: request)
+
+        if let cachedResponse = await cache.response(for: key) {
+            return AsyncThrowingStream { continuation in
+                continuation.yield(.completed(cachedResponse))
+                continuation.finish()
+            }
+        }
+
+        let stream = try await self.provider.stream(for: request)
+
+        return AsyncThrowingStream { continuation in
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    continuation.finish(throwing: CoreError.invalidSession)
+                    return
+                }
+
+                var builder = PredictionResponseBuilder()
+                
+                do {
+                    for try await event in stream {
+                        builder.consume(event)
+                        continuation.yield(event)
+                    }
+                    let response = builder.build()
+                    await self.cache.store(response, for: key)
+                    continuation.yield(.completed(response))
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+}
+
+final class PredictionResponseBuilder {
+    private var content = ""
+    
+    func consume(_ event: InferenceStreamEvent) {
+        switch event {
+        case .textDelta(let delta):
+            content += delta
+        default:
+            break
+        }
+    }
+
+    func build() -> PredictionResponse {
+        PredictionResponse(content: content)
     }
 }
