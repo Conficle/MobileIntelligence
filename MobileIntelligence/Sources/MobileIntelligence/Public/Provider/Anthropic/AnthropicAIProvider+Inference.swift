@@ -23,9 +23,14 @@
 //
 
 extension AnthropicAIProvider: InferenceProvider {
+    /// Prepares the Anthropic provider with the selected model.
+    /// - Parameter model: The model to use for future Anthropic requests.
     public func bootstrap(withModel model: any AIModel) async {
     }
 
+    /// Produces a prediction using the Anthropic provider.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The prediction response.
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         return PredictionResponse()
     }

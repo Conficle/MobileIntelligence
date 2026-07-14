@@ -15,10 +15,15 @@
 //  limitations under the License.
 //
 
+/// Groups common REST client configuration values.
 struct RESTClientConfiguration: Sendable {
     let baseURL: String
     let defaultHeaders: [String: String]
 
+    /// Creates a REST client configuration.
+    /// - Parameters:
+    ///   - baseURL: The base URL used for all requests.
+    ///   - defaultHeaders: Headers applied to every request unless overridden.
     init(baseURL: String,
          defaultHeaders: [String: String] = [:]) {
         self.baseURL = baseURL

@@ -22,6 +22,8 @@
 //  Created by Nitin Bhagwan Manghwani on 28/06/26.
 //
 
+/// Context attached to a prediction request.
 public struct Context: Sendable {
+    /// Creates an empty context.
     public init() {}
 }

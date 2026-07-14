@@ -15,6 +15,7 @@
 //  limitations under the License.
 //
 
+/// Encodable request body for the OpenAI Responses API.
 struct OpenAIResponsesRequest: Encodable, Sendable {
     let model: String
     let reasoning: Reasoning
@@ -22,6 +23,7 @@ struct OpenAIResponsesRequest: Encodable, Sendable {
     let temperature: Double?
     let maxOutputTokens: Int?
 
+    /// Maps Swift property names to OpenAI JSON field names.
     enum CodingKeys: String, CodingKey {
         case model
         case reasoning
@@ -30,14 +32,17 @@ struct OpenAIResponsesRequest: Encodable, Sendable {
         case maxOutputTokens = "max_output_tokens"
     }
 
+    /// Reasoning options sent to the OpenAI Responses API.
     struct Reasoning: Encodable, Sendable {
         let effort: String
     }
 
+    /// Input message sent to the OpenAI Responses API.
     struct Message: Encodable, Sendable {
         let role: Role
         let content: String
 
+        /// Supported input message roles.
         enum Role: String, Encodable, Sendable {
             case developer
             case user
@@ -45,9 +50,12 @@ struct OpenAIResponsesRequest: Encodable, Sendable {
     }
 }
 
+/// Decodable response body from the OpenAI Responses API.
 struct OpenAIResponsesResponse: Decodable, Sendable {
     let output: [OutputItem]
 
+    /// Extracted text output joined from all output text content blocks.
+    /// - Returns: Joined text from message output text blocks.
     var outputText: String {
         output
             .filter { $0.type == "message" }
@@ -58,15 +66,19 @@ struct OpenAIResponsesResponse: Decodable, Sendable {
             .joined(separator: "\n")
     }
 
+    /// Top-level output item returned by the OpenAI Responses API.
     struct OutputItem: Decodable, Sendable {
         let type: String
         let content: [Content]
 
+        /// JSON keys used to decode output items.
         enum CodingKeys: CodingKey {
             case type
             case content
         }
 
+        /// Decodes an output item while treating missing content as empty.
+        /// - Parameter decoder: The decoder containing an output item payload.
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.type = try container.decode(String.self, forKey: .type)
@@ -74,15 +86,19 @@ struct OpenAIResponsesResponse: Decodable, Sendable {
         }
     }
 
+    /// Content block returned within an OpenAI output item.
     struct Content: Decodable, Sendable {
         let type: String
         let text: String
 
+        /// JSON keys used to decode content blocks.
         enum CodingKeys: CodingKey {
             case type
             case text
         }
 
+        /// Decodes a content block while treating missing text as empty.
+        /// - Parameter decoder: The decoder containing a content block payload.
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.type = try container.decode(String.self, forKey: .type)

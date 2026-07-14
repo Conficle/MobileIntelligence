@@ -22,6 +22,9 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
+/// Model descriptor used by inference providers.
 public protocol AIModel: Sendable {
+    /// Provider-specific model name.
+    /// - Returns: The model identifier used by the provider.
     var name: String { get }
 }

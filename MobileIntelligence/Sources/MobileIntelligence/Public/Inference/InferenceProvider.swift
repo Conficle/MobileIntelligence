@@ -22,7 +22,14 @@
 //  Created by Nitin Bhagwan Manghwani on 05/07/26.
 //
 
+/// Provider abstraction for model-backed inference.
 public protocol InferenceProvider: Actor {
+    /// Prepares the provider with the selected model.
+    /// - Parameter model: The model to use for future predictions.
     func bootstrap(withModel model: AIModel) async
+
+    /// Produces a prediction for the request.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The prediction response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }

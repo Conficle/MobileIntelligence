@@ -23,9 +23,12 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
+/// Response returned by an inference provider.
 public struct PredictionResponse: Sendable {
     public let content: String
 
+    /// Creates a prediction response.
+    /// - Parameter content: The text content returned by a provider.
     init(content: String = "") {
         self.content = content
     }
