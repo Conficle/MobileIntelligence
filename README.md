@@ -1,18 +1,18 @@
 # MobileIntelligence
 
-MobileIntelligence is an open-source Swift SDK for adding AI prediction capabilities to iOS applications through a provider-oriented architecture.
+MobileIntelligence is an open-source Swift SDK for adding AI prediction capabilities to iOS apps through a provider-oriented architecture.
 
-The package is designed around small, actor-safe contracts for clients, providers, requests, and responses. It currently includes native Apple inference support via `FoundationModels`, an implemented OpenAI provider, and a scaffolded Anthropic provider.
+It is designed around small, actor-safe contracts for clients, providers, requests, and responses, making it easy to swap inference backends while keeping your app code consistent.
 
-## Highlights
+## Features
 
-- Provider-oriented API for routing predictions through native, OpenAI, Anthropic, or custom providers.
+- Provider-based API for routing predictions through Apple, OpenAI, Anthropic, or custom backends.
 - Swift Concurrency first, with actor-based clients and providers.
 - Native Apple inference support using `FoundationModels` on supported iOS versions.
 - Typed prediction requests with prompt instructions, query text, context, token limits, temperature, and reasoning level.
 - Lightweight response model for returning generated content.
 - Request-level prediction caching to avoid re-running identical provider/model requests.
-- Demo SwiftUI app for exercising provider selection and prediction flow.
+- A demo SwiftUI app for exercising provider selection and prediction flow.
 
 ## Requirements
 
@@ -22,6 +22,8 @@ The package is designed around small, actor-safe contracts for clients, provider
 - iOS 26+ for Apple FoundationModels-backed native inference
 
 ## Installation
+
+### Swift Package Manager
 
 Add MobileIntelligence to your app with Swift Package Manager:
 
@@ -62,7 +64,7 @@ print(response.content)
 
 ## Prediction Caching
 
-MobileIntelligence now caches successful predictions before delegating to the underlying provider. The cache is implemented at the shared inference-engine layer, so it applies consistently across supported providers.
+MobileIntelligence caches successful predictions before delegating to the underlying provider. The cache sits in the shared inference-engine layer, so it applies consistently across providers.
 
 ### What is cached
 
