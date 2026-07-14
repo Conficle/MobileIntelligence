@@ -27,7 +27,14 @@ protocol ClientFactory: Actor {
 }
 
 final actor DefaultClientFactory: ClientFactory {
+    private static let sharedPredictionCache = InMemoryPredictionCache()
+    private let cache: PredictionCache
+
+    init(cache: PredictionCache = DefaultClientFactory.sharedPredictionCache) {
+        self.cache = cache
+    }
+
     func inferenceEngine(forProvider provider: InferenceProvider, model: AIModel) -> InferenceEngine {
-        return DefaultInferenceEngine(provider: provider)
+        return DefaultInferenceEngine(provider: provider, model: model, cache: cache)
     }
 }

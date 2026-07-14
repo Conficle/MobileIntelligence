@@ -25,6 +25,7 @@
 extension DefaultAIClient {
     public func bootstrapInference(_ inferenceProvider: any InferenceProvider, model: AIModel) async {
         inferenceEnginge = await clientFactory.inferenceEngine(forProvider: inferenceProvider, model: model)
+        await inferenceEnginge?.bootstrapInferenceProvider(withModel: model)
     }
     
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
