@@ -15,5 +15,6 @@
 //  limitations under the License.
 //
 
+/// Namespace for MobileIntelligence package-level symbols.
 public enum MobileIntelligence {
 }

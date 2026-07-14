@@ -22,6 +22,7 @@
 //  Created by Nitin Bhagwan Manghwani on 27/06/26.
 //
 
+/// Describes the reasoning depth requested from a model.
 public enum ReasoningEffort: Sendable {
     case low
     case medium
@@ -29,6 +30,7 @@ public enum ReasoningEffort: Sendable {
     case deep
 }
 
+/// Input payload for an inference prediction.
 public struct PredictionRequest: Sendable {
     let prompt: Prompt?
     let context: Context
@@ -37,6 +39,14 @@ public struct PredictionRequest: Sendable {
     let maxTokens: Int?
     let reasoning: ReasoningEffort
 
+    /// Creates a prediction request.
+    /// - Parameters:
+    ///   - prompt: Optional system instructions for the request.
+    ///   - context: Context attached to the request.
+    ///   - query: User query to answer.
+    ///   - temperature: Optional sampling temperature.
+    ///   - maxTokens: Optional maximum output token count.
+    ///   - reasoning: Requested reasoning effort.
     public init(prompt: Prompt? = nil,
                 context: Context,
                 query: Query,

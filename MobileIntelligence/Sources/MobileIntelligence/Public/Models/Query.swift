@@ -22,9 +22,12 @@
 //  Created by Nitin Bhagwan Manghwani on 28/06/26.
 //
 
+/// User query supplied with a prediction request.
 public struct Query: Sendable {
     let question: String
 
+    /// Creates a query with the given question.
+    /// - Parameter question: The user question to send to a provider.
     public init(question: String) {
         self.question = question
     }

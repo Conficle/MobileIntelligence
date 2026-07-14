@@ -22,9 +22,12 @@
 //  Created by Nitin Bhagwan Manghwani on 05/07/26.
 //
 
+/// Native Apple model identifiers supported by the package.
 public enum NativeModelType: AIModel {
     case system
 
+    /// Provider-specific model name.
+    /// - Returns: The native model identifier.
     public var name: String {
         switch self {
         case .system:

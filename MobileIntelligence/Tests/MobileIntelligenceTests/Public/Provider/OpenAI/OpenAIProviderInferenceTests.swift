@@ -19,6 +19,7 @@ import Foundation
 import Testing
 @testable import MobileIntelligence
 
+/// Verifies OpenAI REST configuration values.
 @Test func openAIAPIConfigurationOwnsBaseURLAndAuthorizationHeader() {
     let configuration = OpenAIAPIConfiguration.restClientConfiguration(apiKey: "test-key")
 
@@ -27,6 +28,7 @@ import Testing
     #expect(OpenAIAPIConfiguration.responsesPath == "/responses")
 }
 
+/// Verifies that the OpenAI provider sends a Responses API request and returns text.
 @Test func openAIProviderSendsResponsesRequestAndReturnsText() async throws {
     let recorder = RESTRequestRecorder()
     let client = MockRESTClient { request in
@@ -85,6 +87,7 @@ import Testing
     #expect(input[1]["content"] as? String == "Are semicolons optional in JavaScript?")
 }
 
+/// Verifies that empty OpenAI text output fails prediction.
 @Test func openAIProviderThrowsWhenResponseHasNoTextOutput() async throws {
     let client = MockRESTClient { (_: RESTRequest<OpenAIResponsesResponse>) in
         let data = Data(#"{"output":[]}"#.utf8)
@@ -110,6 +113,7 @@ import Testing
     }
 }
 
+/// Verifies that optional OpenAI prompt and temperature fields are omitted.
 @Test func openAIProviderOmitsOptionalPromptAndTemperature() async throws {
     let recorder = RESTRequestRecorder()
     let client = MockRESTClient { request in
@@ -159,6 +163,7 @@ import Testing
     #expect(input[0]["content"] as? String == "Say hello")
 }
 
+/// Verifies that deep reasoning maps to the OpenAI xhigh value.
 @Test func openAIProviderMapsDeepReasoningEffortToXHigh() async throws {
     let recorder = RESTRequestRecorder()
     let client = MockRESTClient { request in
@@ -209,21 +214,30 @@ import Testing
     #expect(reasoning["effort"] as? String == "xhigh")
 }
 
+/// Records the first OpenAI REST request sent by a provider test.
 private actor RESTRequestRecorder {
     private(set) var firstRequest: RESTRequest<OpenAIResponsesResponse>?
 
+    /// Stores a captured OpenAI REST request.
+    /// - Parameter request: The OpenAI REST request to record.
     func record(_ request: RESTRequest<OpenAIResponsesResponse>) {
         firstRequest = request
     }
 }
 
+/// Mock REST client backed by a typed OpenAI request handler.
 private final class MockRESTClient: RESTClient, @unchecked Sendable {
     private let handler: @Sendable (RESTRequest<OpenAIResponsesResponse>) async throws -> OpenAIResponsesResponse
 
+    /// Creates a mock REST client with a request handler.
+    /// - Parameter handler: The handler used to produce OpenAI responses.
     init(handler: @escaping @Sendable (RESTRequest<OpenAIResponsesResponse>) async throws -> OpenAIResponsesResponse) {
         self.handler = handler
     }
 
+    /// Sends a request through the supplied OpenAI handler.
+    /// - Parameter request: The REST request to send.
+    /// - Returns: The decoded response returned by the handler.
     func send<Response: Decodable & Sendable>(_ request: RESTRequest<Response>) async throws -> Response {
         guard let openAIRequest = request as? RESTRequest<OpenAIResponsesResponse> else {
             throw CoreError.predictionFailed

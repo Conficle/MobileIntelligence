@@ -22,7 +22,16 @@
 //  Created by Nitin Bhagwan Manghwani on 04/07/26.
 //
 
+/// Client capabilities for configuring and running inference.
 public protocol InferenceClient: Actor {
+    /// Configures inference with a provider and model.
+    /// - Parameters:
+    ///   - inferenceProvider: The provider used for future predictions.
+    ///   - model: The selected model used by the provider.
     func bootstrapInference(_ inferenceProvider: InferenceProvider, model: AIModel) async
+
+    /// Produces a prediction for the request.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The prediction response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
 }

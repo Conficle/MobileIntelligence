@@ -22,6 +22,7 @@
 //  Created by Nitin Bhagwan Manghwani on 05/07/26.
 //
 
+/// OpenAI model identifiers supported by the package.
 public enum OpenAIModelType: String, AIModel {
 
     // MARK: - GPT 4.1
@@ -66,6 +67,8 @@ public enum OpenAIModelType: String, AIModel {
 
     case gpt5_6 = "gpt-5.6"
 
+    /// Provider-specific model name.
+    /// - Returns: The OpenAI model identifier.
     public var name: String {
         return rawValue
     }

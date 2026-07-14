@@ -23,10 +23,15 @@
 //
 
 extension OpenAIProvider: InferenceProvider {
+    /// Stores the selected model for future OpenAI requests.
+    /// - Parameter model: The model to use for future OpenAI requests.
     public func bootstrap(withModel model: any AIModel) async {
         self.model = model
     }
 
+    /// Sends the prediction request to the OpenAI Responses API.
+    /// - Parameter request: The prediction request to execute.
+    /// - Returns: The prediction response returned by OpenAI.
     public func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         do {
             let response = try await restClient.send(makeResponsesRequest(for: request))
@@ -44,6 +49,9 @@ extension OpenAIProvider: InferenceProvider {
 }
 
 private extension OpenAIProvider {
+    /// Builds an OpenAI Responses API REST request from a prediction request.
+    /// - Parameter request: The prediction request to convert.
+    /// - Returns: A REST request targeting the OpenAI Responses API.
     func makeResponsesRequest(for request: PredictionRequest) throws -> RESTRequest<OpenAIResponsesResponse> {
         var input = [OpenAIResponsesRequest.Message]()
 
@@ -80,6 +88,8 @@ private extension OpenAIProvider {
 }
 
 private extension ReasoningEffort {
+    /// OpenAI Responses API value for the reasoning effort.
+    /// - Returns: The OpenAI reasoning effort value.
     var openAIValue: String {
         switch self {
         case .low:

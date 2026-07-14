@@ -22,15 +22,24 @@
 //  Created by Nitin Bhagwan Manghwani on 28/06/26.
 //
 
+/// Common shape for MobileIntelligence errors.
 public protocol MobileIntelligenceError {
+    /// Stable error code.
+    /// - Returns: The numeric code for the error.
     var code: Int { get }
+
+    /// Human-readable error message.
+    /// - Returns: The message describing the error.
     var message: String { get }
 }
 
+/// Core package errors.
 public enum CoreError: Error, MobileIntelligenceError {
     case invalidProviderConfiguration
     case predictionFailed
 
+    /// Stable error code.
+    /// - Returns: The numeric code for the core error.
     public var code: Int {
         switch self {
         case .invalidProviderConfiguration:
@@ -40,6 +49,8 @@ public enum CoreError: Error, MobileIntelligenceError {
         }
     }
 
+    /// Human-readable error message.
+    /// - Returns: The message describing the core error.
     public var message: String {
         switch self {
         case .invalidProviderConfiguration:

@@ -22,9 +22,12 @@
 //  Created by Nitin Bhagwan Manghwani on 05/07/26.
 //
 
+/// Anthropic-backed inference provider.
 public final actor AnthropicAIProvider: AIProvider {
+    /// Creates an Anthropic provider.
     public init() {}
 
+    /// Configuration for Anthropic provider setup.
     public struct Configuration {
         
     }

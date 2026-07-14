@@ -17,22 +17,38 @@
 
 import Foundation
 
+/// Abstracts URL loading so REST clients can be tested with custom sessions.
 protocol HTTPSession: Sendable {
+    /// Loads data for the provided URL request.
+    /// - Parameter request: The URL request to send.
+    /// - Returns: The response data and URL response.
     func data(for request: URLRequest) async throws -> (Data, URLResponse)
 }
 
+/// Allows URLSession to satisfy the package's HTTP session abstraction.
 extension URLSession: HTTPSession {}
 
+/// Sends typed REST requests and decodes typed responses.
 protocol RESTClient: Sendable {
+    /// Sends a REST request and decodes the expected response type.
+    /// - Parameter request: The typed REST request to send.
+    /// - Returns: The decoded response value.
     func send<Response: Decodable & Sendable>(_ request: RESTRequest<Response>) async throws -> Response
 }
 
+/// Default REST client backed by an HTTP session and JSON decoder.
 actor DefaultRESTClient: RESTClient {
     private let baseURL: String
     private let defaultHeaders: [String: String]
     private let decoder: JSONDecoder
     private let session: any HTTPSession
 
+    /// Creates a REST client from explicit transport configuration values.
+    /// - Parameters:
+    ///   - baseURL: The base URL used for all requests.
+    ///   - defaultHeaders: Headers applied to every request unless overridden.
+    ///   - decoder: The decoder used for response bodies.
+    ///   - session: The HTTP session used to load requests.
     init(baseURL: String,
          defaultHeaders: [String: String] = [:],
          decoder: JSONDecoder = JSONDecoder(),
@@ -43,6 +59,11 @@ actor DefaultRESTClient: RESTClient {
         self.session = session
     }
 
+    /// Creates a REST client from a reusable configuration value.
+    /// - Parameters:
+    ///   - configuration: The base URL and default headers for the client.
+    ///   - decoder: The decoder used for response bodies.
+    ///   - session: The HTTP session used to load requests.
     init(configuration: RESTClientConfiguration,
          decoder: JSONDecoder = JSONDecoder(),
          session: any HTTPSession = URLSession.shared) {
@@ -54,6 +75,9 @@ actor DefaultRESTClient: RESTClient {
         )
     }
 
+    /// Sends the request, validates the HTTP response, and decodes the response body.
+    /// - Parameter request: The typed REST request to send.
+    /// - Returns: The decoded response value.
     func send<Response: Decodable & Sendable>(_ request: RESTRequest<Response>) async throws -> Response {
         let urlRequest = try makeURLRequest(from: request)
         let (data, response) = try await session.data(for: urlRequest)
@@ -84,6 +108,9 @@ actor DefaultRESTClient: RESTClient {
         }
     }
 
+    /// Converts a typed REST request into a URLRequest.
+    /// - Parameter request: The typed REST request to convert.
+    /// - Returns: A URLRequest ready to send.
     private func makeURLRequest<Response>(from request: RESTRequest<Response>) throws -> URLRequest {
         let url = try makeURL(path: request.path, queryItems: request.queryItems)
         var urlRequest = URLRequest(url: url)
@@ -113,6 +140,11 @@ actor DefaultRESTClient: RESTClient {
         return urlRequest
     }
 
+    /// Builds the final URL by combining the base URL, path, and query items.
+    /// - Parameters:
+    ///   - path: The endpoint path to append to the base URL.
+    ///   - queryItems: Query items to include in the URL.
+    /// - Returns: The fully constructed URL.
     private func makeURL(path: String, queryItems: [URLQueryItem]) throws -> URL {
         guard let baseURL = URL(string: baseURL) else {
             throw RESTError.invalidURL
@@ -140,6 +172,11 @@ actor DefaultRESTClient: RESTClient {
         return url
     }
 
+    /// Creates a REST error from an unsuccessful HTTP response.
+    /// - Parameters:
+    ///   - statusCode: The HTTP status code returned by the server.
+    ///   - data: The response body returned by the server.
+    /// - Returns: A REST error representing the failed response.
     private func makeAPIError(statusCode: Int, data: Data) -> RESTError {
         if let message = decodeAPIErrorMessage(from: data), !message.isEmpty {
             return .apiError(statusCode: statusCode, message: message, data: data)
@@ -152,6 +189,9 @@ actor DefaultRESTClient: RESTClient {
         return .apiError(statusCode: statusCode, message: body, data: data)
     }
 
+    /// Attempts to decode common API error payload shapes into a message.
+    /// - Parameter data: The response body containing a possible API error.
+    /// - Returns: A decoded error message when one is available.
     private func decodeAPIErrorMessage(from data: Data) -> String? {
         guard !data.isEmpty else {
             return nil
@@ -173,22 +213,28 @@ actor DefaultRESTClient: RESTClient {
     }
 }
 
+/// Decodes nested API error payloads shaped as `{ "error": { "message": ... } }`.
 private struct APIErrorResponse: Decodable {
     let error: APIError
 
+    /// The nested API error message.
+    /// - Returns: The message contained in the nested error object.
     var message: String {
         error.message
     }
 
+    /// Decodes the nested error object from an API error payload.
     struct APIError: Decodable {
         let message: String
     }
 }
 
+/// Decodes API error payloads shaped as `{ "error": ... }`.
 private struct APIStringErrorResponse: Decodable {
     let error: String
 }
 
+/// Decodes API error payloads shaped as `{ "message": ... }`.
 private struct APIMessageResponse: Decodable {
     let message: String
 }

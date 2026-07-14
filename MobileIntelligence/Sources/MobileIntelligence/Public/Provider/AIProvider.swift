@@ -22,4 +22,5 @@
 //  Created by Nitin Bhagwan Manghwani on 28/06/26.
 //
 
+/// Marker protocol for all AI provider actors.
 public protocol AIProvider: Actor {}

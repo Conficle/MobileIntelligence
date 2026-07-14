@@ -15,6 +15,7 @@
 //  limitations under the License.
 //
 
+/// Supported HTTP methods for REST requests.
 enum HTTPMethod: String, Sendable {
     case delete = "DELETE"
     case get = "GET"

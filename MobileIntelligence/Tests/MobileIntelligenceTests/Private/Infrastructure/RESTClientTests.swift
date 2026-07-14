@@ -19,6 +19,7 @@ import Foundation
 import Testing
 @testable import MobileIntelligence
 
+/// Verifies that the REST client builds a request and decodes a response.
 @Test func restClientBuildsRequestAndDecodesResponse() async throws {
     let recorder = RequestRecorder()
     let session = MockHTTPSession { request in
@@ -62,6 +63,7 @@ import Testing
     #expect(capturedRequest.httpBody == Data(#"{"message":"ping"}"#.utf8))
 }
 
+/// Verifies that unsuccessful HTTP status codes produce API errors.
 @Test func restClientThrowsForUnsuccessfulStatusCode() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -92,6 +94,7 @@ import Testing
     }
 }
 
+/// Verifies that nested API error messages are decoded.
 @Test func restClientThrowsNestedAPIErrorMessage() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -121,6 +124,7 @@ import Testing
     }
 }
 
+/// Verifies that string API error payloads are decoded.
 @Test func restClientThrowsForStringAPIErrorResponse() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -151,6 +155,7 @@ import Testing
     }
 }
 
+/// Verifies that message API error payloads are decoded.
 @Test func restClientThrowsForMessageAPIErrorResponse() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -181,6 +186,7 @@ import Testing
     }
 }
 
+/// Verifies that empty unsuccessful responses produce unacceptable status errors.
 @Test func restClientThrowsForUnacceptableStatusCodeWithEmptyBody() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -210,6 +216,7 @@ import Testing
     }
 }
 
+/// Verifies that non-HTTP responses are rejected.
 @Test func restClientThrowsForInvalidResponseType() async throws {
     let session = MockHTTPSession { request in
         let response = URLResponse(
@@ -238,6 +245,7 @@ import Testing
     }
 }
 
+/// Verifies that empty success responses can be decoded explicitly.
 @Test func restClientSupportsEmptyResponses() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -261,6 +269,7 @@ import Testing
     #expect(response == EmptyRESTResponse())
 }
 
+/// Verifies that empty bodies fail when a non-empty response is expected.
 @Test func restClientThrowsForEmptyBodyOnNonEmptyResponse() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -289,6 +298,7 @@ import Testing
     }
 }
 
+/// Verifies that malformed base URLs fail request construction.
 @Test func restClientThrowsInvalidURLForMalformedBaseURL() async throws {
     let session = MockHTTPSession { request in
         let response = HTTPURLResponse(
@@ -317,29 +327,40 @@ import Testing
     }
 }
 
+/// Encodable request body used by REST client tests.
 private struct TestBody: Encodable {
     let message: String
 }
 
+/// Decodable response body used by REST client tests.
 private struct TestResponse: Decodable, Equatable, Sendable {
     let message: String
 }
 
+/// Records the first URL request received by a mock session.
 private actor RequestRecorder {
     private(set) var firstRequest: URLRequest?
 
+    /// Stores a captured URL request.
+    /// - Parameter request: The URL request to record.
     func record(_ request: URLRequest) {
         firstRequest = request
     }
 }
 
+/// Mock HTTP session backed by a supplied request handler.
 private final class MockHTTPSession: HTTPSession, @unchecked Sendable {
     private let handler: @Sendable (URLRequest) async throws -> (Data, URLResponse)
 
+    /// Creates a mock session with a request handler.
+    /// - Parameter handler: The handler used to produce data and responses.
     init(handler: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse)) {
         self.handler = handler
     }
 
+    /// Handles a URL request using the supplied handler.
+    /// - Parameter request: The URL request to handle.
+    /// - Returns: The data and URL response produced by the handler.
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         try await handler(request)
     }

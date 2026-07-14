@@ -17,6 +17,7 @@
 
 import Foundation
 
+/// Describes a typed REST request and its expected response type.
 struct RESTRequest<Response: Decodable & Sendable>: Sendable {
     let path: String
     let method: HTTPMethod
@@ -25,6 +26,14 @@ struct RESTRequest<Response: Decodable & Sendable>: Sendable {
     let body: Data?
     let timeoutInterval: TimeInterval?
 
+    /// Creates a REST request from raw request components.
+    /// - Parameters:
+    ///   - path: The endpoint path for the request.
+    ///   - method: The HTTP method to use.
+    ///   - queryItems: Query items to include in the request URL.
+    ///   - headers: Request-specific headers.
+    ///   - body: Optional raw request body data.
+    ///   - timeoutInterval: Optional request timeout interval.
     init(path: String,
          method: HTTPMethod = .get,
          queryItems: [URLQueryItem] = [],
@@ -39,6 +48,15 @@ struct RESTRequest<Response: Decodable & Sendable>: Sendable {
         self.timeoutInterval = timeoutInterval
     }
 
+    /// Creates a REST request by encoding an Encodable JSON body.
+    /// - Parameters:
+    ///   - path: The endpoint path for the request.
+    ///   - method: The HTTP method to use.
+    ///   - queryItems: Query items to include in the request URL.
+    ///   - headers: Request-specific headers.
+    ///   - body: The encodable body to serialize as JSON.
+    ///   - encoder: The encoder used to serialize the body.
+    ///   - timeoutInterval: Optional request timeout interval.
     init<Body: Encodable>(path: String,
                           method: HTTPMethod = .post,
                           queryItems: [URLQueryItem] = [],
@@ -57,8 +75,12 @@ struct RESTRequest<Response: Decodable & Sendable>: Sendable {
     }
 }
 
+/// Represents a successful REST response with no response body.
 struct EmptyRESTResponse: Decodable, Equatable, Sendable {
+    /// Creates an empty response value.
     init() {}
 
+    /// Decodes an empty response value from any decoder input.
+    /// - Parameter decoder: The decoder supplied by Swift's Decodable system.
     init(from decoder: Decoder) throws {}
 }
