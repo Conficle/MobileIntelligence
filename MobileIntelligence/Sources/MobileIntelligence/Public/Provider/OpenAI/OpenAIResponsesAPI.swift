@@ -22,6 +22,7 @@ struct OpenAIResponsesRequest: Encodable, Sendable {
     let input: [Message]
     let temperature: Double?
     let maxOutputTokens: Int?
+    let stream: Bool
 
     /// Maps Swift property names to OpenAI JSON field names.
     enum CodingKeys: String, CodingKey {
@@ -30,6 +31,7 @@ struct OpenAIResponsesRequest: Encodable, Sendable {
         case input
         case temperature
         case maxOutputTokens = "max_output_tokens"
+        case stream
     }
 
     /// Reasoning options sent to the OpenAI Responses API.

@@ -45,16 +45,44 @@ extension NativeAIProvider: AppleInferenceProvider {
         }
     }
 
+    public func stream(for request: PredictionRequest) throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        try checkAvailability()
+        makeLanguageModelSession(forInstruction: request.prompt?.instructions ?? "")
+        return AsyncThrowingStream { continuation in
+            Task { [weak self] in
+                guard let self,
+                      let session = await self.session else {
+                    continuation.finish(throwing: CoreError.invalidSession)
+                    return
+                }
+                let stream = session.streamResponse(to: request.query.question)
+                do {
+                    var previous = ""
+                    for try await snapshot in stream {
+                        let current = snapshot.content
+                        let delta = String(current.dropFirst(previous.count))
+                        previous = current
+                        debugPrint("\(delta)")
+                        continuation.yield(.textDelta(delta))
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+
     /// Produces a typed generated response using Apple FoundationModels.
     /// - Parameters:
     ///   - request: The prediction request to execute.
     ///   - generating: The expected generated response type.
     /// - Returns: The typed generated response.
-    public func predict<T: Generable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T {
+    public func predict<T: Generable>(forRequest request: PredictionRequest, generating: T.Type) async throws -> T? {
         try checkAvailability()
-        let session = LanguageModelSession(model: .default, instructions: request.prompt?.instructions ?? "")
-        let response = try await session.respond(to: request.query.question, generating: generating)
-        return response.content
+        makeLanguageModelSession(forInstruction: request.prompt?.instructions ?? "")
+        let response = try await session?.respond(to: request.query.question, generating: generating)
+        return response?.content
     }
 }
 

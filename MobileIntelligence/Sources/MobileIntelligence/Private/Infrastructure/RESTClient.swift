@@ -23,6 +23,7 @@ protocol HTTPSession: Sendable {
     /// - Parameter request: The URL request to send.
     /// - Returns: The response data and URL response.
     func data(for request: URLRequest) async throws -> (Data, URLResponse)
+    func bytes(for request: URLRequest, delegate: (any URLSessionTaskDelegate)?) async throws -> (URLSession.AsyncBytes, URLResponse)
 }
 
 /// Allows URLSession to satisfy the package's HTTP session abstraction.
@@ -34,6 +35,7 @@ protocol RESTClient: Sendable {
     /// - Parameter request: The typed REST request to send.
     /// - Returns: The decoded response value.
     func send<Response: Decodable & Sendable>(_ request: RESTRequest<Response>) async throws -> Response
+    func stream<Response: Decodable & Sendable>(_ request: RESTRequest<Response>) async throws -> URLSession.AsyncBytes
 }
 
 /// Default REST client backed by an HTTP session and JSON decoder.
@@ -106,6 +108,21 @@ actor DefaultRESTClient: RESTClient {
         } catch {
             throw RESTError.decodingFailed(error.localizedDescription)
         }
+    }
+
+    func stream<Response: Decodable & Sendable>(_ request: RESTRequest<Response>) async throws -> URLSession.AsyncBytes {
+        let urlRequest = try makeURLRequest(from: request)
+        let (bytes, response) = try await session.bytes(for: urlRequest, delegate: nil)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw RESTError.invalidResponse
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw RESTError.apiError(statusCode: httpResponse.statusCode, message: "Stream failed", data: Data())
+        }
+
+        return bytes
     }
 
     /// Converts a typed REST request into a URLRequest.

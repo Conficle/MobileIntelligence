@@ -19,6 +19,8 @@
 public final actor OpenAIProvider: AIProvider {
     let configuration: Configuration
     let restClient: any RESTClient
+    let decoder = OpenAIStreamEventDecoder()
+    let mapper = OpenAIStreamEventMapper()
     var model: any AIModel = OpenAIModelType.gpt5_6
 
     /// Creates an OpenAI provider using the default REST client.
