@@ -26,7 +26,8 @@ It gives your app one consistent client surface for native Apple inference, Open
 - [x] Typed prediction requests with prompt, context, query, temperature, token limit, and reasoning effort.
 - [x] Normalized text responses through `PredictionResponse`.
 - [x] Shared in-memory prediction caching for repeated provider/model/request combinations.
-- [x] SwiftUI demo app for provider selection and prediction flow.
+- [x] Streaming inference support for progressively consuming provider responses.
+- [x] SwiftUI demo app for provider selection, streaming toggle, and prediction flow.
 - [x] Unit coverage for clients, providers, REST infrastructure, models, and caching behavior.
 
 ## Write Predictions Fast
@@ -166,6 +167,41 @@ if #available(iOS 26.0, *) {
 }
 ```
 
+### Streaming Responses
+
+Use the streaming API when you want to consume tokens as they arrive from the selected provider.
+
+```swift
+import MobileIntelligence
+
+let client = DefaultAIClient()
+let provider = OpenAIProvider(configuration: .init(apiKey: "YOUR_API_KEY"))
+
+await client.bootstrapInference(provider, model: OpenAIModelType.gpt5_6)
+
+let request = PredictionRequest(
+    prompt: Prompt(instructions: "Respond in short bursts."),
+    context: Context(),
+    query: Query(question: "Explain streaming in one sentence."),
+    temperature: 0.7,
+    maxTokens: 300,
+    reasoning: .medium
+)
+
+let stream = try await client.stream(for: request)
+
+for try await event in stream {
+    switch event {
+    case .started:
+        print("Streaming started")
+    case .textDelta(let delta):
+        print(delta, terminator: "")
+    case .completed(let response):
+        print("\nCompleted: \(response.content)")
+    }
+}
+```
+
 ### Custom Providers
 
 Implement `InferenceProvider` to plug in your own backend.
@@ -249,7 +285,7 @@ The repository includes a SwiftUI demo app:
 Demo/MobileIntelligenceDemo
 ```
 
-The demo app shows provider selection, model selection, prompt and query input, request construction, client bootstrapping, and response rendering.
+The demo app shows provider selection, model selection, prompt and query input, request construction, client bootstrapping, response rendering, and a streaming toggle that switches between standard prediction and streamed responses.
 
 Open the Xcode project to run it locally:
 
@@ -276,7 +312,7 @@ Demo/
 ## Roadmap
 
 - Complete Anthropic inference.
-- Add streaming response support.
+- Expand streaming support to additional provider-specific event handling.
 - Add structured response helpers.
 - Expand context handling.
 - Add persistent cache storage, TTLs, and eviction policies.
