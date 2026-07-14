@@ -30,17 +30,35 @@ protocol InferenceEngine: Actor {
 
 final actor DefaultInferenceEngine: InferenceEngine {
     let provider: InferenceProvider
+    let cache: PredictionCache
+    private var modelName: String
 
-    init(provider: InferenceProvider) {
+    init(provider: InferenceProvider,
+         model: AIModel? = nil,
+         cache: PredictionCache = InMemoryPredictionCache()) {
         self.provider = provider
+        self.cache = cache
+        self.modelName = model?.name ?? "unconfigured"
     }
 
     func bootstrapInferenceProvider(withModel model: AIModel) async {
+        modelName = model.name
         await provider.bootstrap(withModel: model)
     }
 
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
+        let key = try PredictionCacheKey(
+            provider: String(describing: type(of: provider)),
+            model: modelName,
+            request: request
+        )
+
+        if let cachedResponse = await cache.response(for: key) {
+            return cachedResponse
+        }
+
         let response = try await provider.predict(forRequest: request)
+        await cache.store(response, for: key)
         return response
     }
 }
