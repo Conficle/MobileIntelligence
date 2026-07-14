@@ -32,4 +32,6 @@ public protocol InferenceProvider: Actor {
     /// - Parameter request: The prediction request to execute.
     /// - Returns: The prediction response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse
+
+    func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error>
 }

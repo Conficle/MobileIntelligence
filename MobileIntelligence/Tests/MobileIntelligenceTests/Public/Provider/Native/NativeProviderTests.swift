@@ -57,7 +57,7 @@ import Testing
     )
 
     await provider.setAvailabilityOverride(.available)
-    let result: String = try await provider.predict(forRequest: request, generating: String.self)
+    let result: String = try await provider.predict(forRequest: request, generating: String.self) ?? ""
     #expect(result is String)
 
     for reason in [
@@ -222,7 +222,7 @@ import Testing
     )
 
     await provider.setAvailabilityOverride(.available)
-    let result: String = try await provider.predict(forRequest: request, generating: String.self)
+    let result: String = try await provider.predict(forRequest: request, generating: String.self) ?? ""
     #expect(result is String)
 }
 

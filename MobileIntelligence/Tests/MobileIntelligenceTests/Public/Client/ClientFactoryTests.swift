@@ -234,6 +234,19 @@ private actor StubInferenceProvider: InferenceProvider {
         }
         return result ?? PredictionResponse(content: "provider ok")
     }
+
+    func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        predictionRequests.append(request)
+        if let error {
+            throw error
+        }
+
+        let response = result ?? PredictionResponse(content: "provider ok")
+        return AsyncThrowingStream { continuation in
+            continuation.yield(.completed(response))
+            continuation.finish()
+        }
+    }
 }
 
 /// Stub inference engine that records bootstrap and prediction calls.
@@ -260,6 +273,14 @@ private actor StubInferenceEngine: InferenceEngine {
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
         receivedRequest = request
         return response
+    }
+
+    func stream(for request: PredictionRequest) async throws -> AsyncThrowingStream<InferenceStreamEvent, Error> {
+        receivedRequest = request
+        return AsyncThrowingStream { continuation in
+            continuation.yield(.completed(response))
+            continuation.finish()
+        }
     }
 }
 
