@@ -1,13 +1,16 @@
 # MobileIntelligence
 
-MobileIntelligence is a Swift SDK for adding AI prediction capabilities to iOS apps through a provider-oriented, actor-safe API.
+MobileIntelligence is a vendor-agnostic AI SDK for Apple platforms that provides a unified API for cloud and on-device foundation models.
 
 It gives your app one consistent client surface for native Apple inference, OpenAI, Anthropic, and custom providers while keeping request construction, model selection, and response handling small and testable.
 
+Write inference code once and switch between providers such as OpenAI, Apple Foundation Models, Anthropic, or your own backend without changing your application code.
+
 - [Features](#features)
-- [Write Predictions Fast](#write-predictions-fast)
+- [Quick Start](#write-predictions-fast)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Architecture](#architecture)
 - [Usage](#usage)
 - [Prediction Caching](#prediction-caching)
 - [Core Concepts](#core-concepts)
@@ -19,7 +22,7 @@ It gives your app one consistent client surface for native Apple inference, Open
 
 ## Features
 
-- [x] Provider-based prediction API for Apple, OpenAI, Anthropic, and custom backends.
+- [x] Provider-based prediction API for Apple, OpenAI   , and custom backends.
 - [x] Swift Concurrency first, with actor-backed clients and providers.
 - [x] Native Apple inference using `FoundationModels` on supported OS versions.
 - [x] OpenAI Responses API integration through a lightweight REST layer.
@@ -30,7 +33,7 @@ It gives your app one consistent client surface for native Apple inference, Open
 - [x] SwiftUI demo app for provider selection, streaming toggle, and prediction flow.
 - [x] Unit coverage for clients, providers, REST infrastructure, models, and caching behavior.
 
-## Write Predictions Fast
+## Quick Start
 
 ```swift
 import MobileIntelligence
@@ -82,6 +85,90 @@ Then add the product to your target:
 ```
 
 You can also add the repository URL directly in Xcode through **File > Add Package Dependencies**.
+
+## Architecture
+
+### Component Flow
+
+```mermaid
+flowchart LR
+    app["iOS / SwiftUI app"]
+
+    subgraph sdk["MobileIntelligence SDK"]
+        client["DefaultAIClient<br/>public async API"]
+        engine["DefaultInferenceEngine<br/>bootstrap, predict, stream"]
+        cache["InMemoryPredictionCache<br/>shared process cache"]
+        models["Prediction models<br/>Prompt, Context, Query,<br/>PredictionRequest, PredictionResponse"]
+
+        subgraph providers["Provider adapters"]
+            native["NativeAIProvider<br/>Apple FoundationModels"]
+            openaiProvider["OpenAIProvider<br/>Responses API adapter"]
+            anthropic["AnthropicAIProvider<br/>scaffolded"]
+            custom["Custom InferenceProvider<br/>app-defined"]
+        end
+
+        rest["DefaultRESTClient<br/>typed HTTP + streaming"]
+        streaming["OpenAI stream decoder / mapper<br/>SSE to InferenceStreamEvent"]
+    end
+
+    foundation["Apple FoundationModels"]
+    openai["OpenAI Responses API"]
+    backend["Custom backend"]
+
+    app -->|"imports SDK and calls"| client
+    client -->|"creates and delegates to"| engine
+    client --> models
+    engine -->|"cache lookup / store"| cache
+    engine -->|"uses request and response types"| models
+    engine -->|"invokes selected"| providers
+
+    native -->|"on-device inference"| foundation
+    openaiProvider -->|"builds requests"| rest
+    openaiProvider -->|"maps streaming events"| streaming
+    rest -->|"HTTPS"| openai
+    custom --> backend
+```
+
+### Block Diagram
+
+```mermaid
+flowchart TD
+    appBlock["App code<br/>SwiftUI / UIKit / application services"]
+
+    subgraph sdkBlock["MobileIntelligence SDK"]
+        facadeBlock["Public facade<br/>DefaultAIClient"]
+        requestBlock["SDK contracts<br/>PredictionRequest / PredictionResponse<br/>Prompt / Context / Query / AIModel"]
+        runtimeBlock["Inference runtime<br/>DefaultInferenceEngine"]
+        cacheBlock["Prediction cache<br/>InMemoryPredictionCache"]
+        providerBlock["Provider boundary<br/>InferenceProvider"]
+
+        subgraph adapterBlock["Provider adapters"]
+            nativeBlock["NativeAIProvider"]
+            openAIBlock["OpenAIProvider"]
+            anthropicBlock["AnthropicAIProvider"]
+            customBlock["Custom provider"]
+        end
+
+        transportBlock["Transport and stream adapters<br/>DefaultRESTClient<br/>OpenAI stream decoder / mapper"]
+    end
+
+    subgraph systemsBlock["Model systems"]
+        appleBlock["Apple FoundationModels"]
+        openAIAPiBlock["OpenAI Responses API"]
+        customBackendBlock["Custom backend"]
+    end
+
+    appBlock --> facadeBlock
+    facadeBlock --> requestBlock
+    facadeBlock --> runtimeBlock
+    runtimeBlock --> cacheBlock
+    runtimeBlock --> providerBlock
+    providerBlock --> adapterBlock
+    openAIBlock --> transportBlock
+    nativeBlock --> appleBlock
+    transportBlock --> openAIAPiBlock
+    customBlock --> customBackendBlock
+```
 
 ## Usage
 
