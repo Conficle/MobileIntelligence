@@ -38,6 +38,7 @@ public enum CoreError: Error, MobileIntelligenceError {
     case invalidSession
     case invalidProviderConfiguration
     case predictionFailed
+    case cacheMiss
 
     /// Stable error code.
     /// - Returns: The numeric code for the core error.
@@ -49,6 +50,8 @@ public enum CoreError: Error, MobileIntelligenceError {
             return 1002
         case .invalidSession:
             return 1003
+        case .cacheMiss:
+            return 1004
         }
     }
 
@@ -62,6 +65,8 @@ public enum CoreError: Error, MobileIntelligenceError {
             return "Prediction failed"
         case .invalidSession:
             return "Invalid session"
+        case .cacheMiss:
+            return "Cache miss"
         }
     }
 }
