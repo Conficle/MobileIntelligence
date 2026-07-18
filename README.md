@@ -26,11 +26,11 @@ Write inference code once and switch between providers such as OpenAI, Apple Fou
 - [x] Swift Concurrency first, with actor-backed clients and providers.
 - [x] Native Apple inference using `FoundationModels` on supported OS versions.
 - [x] OpenAI Responses API integration through a lightweight REST layer.
-- [x] Typed prediction requests with prompt, context, query, temperature, token limit, and reasoning effort.
+- [x] Typed prediction requests with prompt, context, query, temperature, token limit, reasoning effort, and cache policy.
 - [x] Normalized text responses through `PredictionResponse`.
-- [x] Shared in-memory prediction caching for repeated provider/model/request combinations.
+- [x] Shared in-memory prediction caching for repeated provider/model/request combinations, with request-level cache policy controls.
 - [x] Streaming inference support for progressively consuming provider responses.
-- [x] SwiftUI demo app for provider selection, streaming toggle, and prediction flow.
+- [x] SwiftUI demo app for provider selection, streaming toggle, cache policy selection, and prediction flow.
 - [x] Unit coverage for clients, providers, REST infrastructure, models, and caching behavior.
 
 ## Quick Start
@@ -50,7 +50,8 @@ let response = try await client.predict(
         query: Query(question: "What is MobileIntelligence?"),
         temperature: 0.7,
         maxTokens: 500,
-        reasoning: .medium
+        reasoning: .medium,
+        cachePolicy: .automatic
     )
 )
 
@@ -188,7 +189,8 @@ let request = PredictionRequest(
     query: Query(question: "Summarize the benefits of on-device AI."),
     temperature: 0.7,
     maxTokens: 300,
-    reasoning: .medium
+    reasoning: .medium,
+    cachePolicy: .automatic
 )
 
 let response = try await client.predict(forRequest: request)
@@ -272,7 +274,8 @@ let request = PredictionRequest(
     query: Query(question: "Explain streaming in one sentence."),
     temperature: 0.7,
     maxTokens: 300,
-    reasoning: .medium
+    reasoning: .medium,
+    cachePolicy: .automatic
 )
 
 let stream = try await client.stream(for: request)
@@ -310,7 +313,7 @@ actor MyProvider: InferenceProvider {
 
 MobileIntelligence caches successful predictions before delegating to the underlying provider.
 
-The standard `client.predict(forRequest:)` path uses a shared in-memory cache keyed by a deterministic, versioned SHA-256 signature that includes:
+The standard `client.predict(forRequest:)` and `client.stream(for:)` paths use a shared in-memory cache keyed by a deterministic, versioned SHA-256 signature that includes:
 
 - provider identity
 - selected model name
@@ -321,7 +324,27 @@ The standard `client.predict(forRequest:)` path uses a shared in-memory cache ke
 - reasoning effort
 - context fingerprint
 
-If the same provider/model/request combination is sent again through the client, the cached response is returned without invoking the provider.
+If the same provider/model/request combination is sent again through the client, the cached response is returned without invoking the provider by default.
+
+Each `PredictionRequest` can choose its cache behavior:
+
+```swift
+let request = PredictionRequest(
+    prompt: Prompt(instructions: "Answer from the current request."),
+    context: Context(),
+    query: Query(question: "What changed since the last response?"),
+    temperature: nil,
+    maxTokens: nil,
+    reasoning: .medium,
+    cachePolicy: .reload
+)
+```
+
+Available cache policies:
+
+- `.automatic` returns a cached response when one exists, otherwise calls the provider and stores the successful response.
+- `.reload` skips cached reads, calls the provider, and stores the fresh successful response.
+- `.cacheOnly` returns a cached response when one exists and throws `CoreError.cacheMiss` when the cache does not contain a response.
 
 Current cache behavior:
 
@@ -329,7 +352,7 @@ Current cache behavior:
 - in-memory
 - process-lifetime only
 - successful responses only
-- applied to the standard prediction path
+- applied to standard prediction and streaming paths
 
 Direct provider calls and typed Apple `Generable` predictions do not currently use this cache path.
 
@@ -345,7 +368,7 @@ The backend contract for prediction providers. Providers are actors and support 
 
 ### `PredictionRequest`
 
-The request payload passed into providers. It includes prompt instructions, context, user query, temperature, token limit, and reasoning effort.
+The request payload passed into providers. It includes prompt instructions, context, user query, temperature, token limit, reasoning effort, and cache policy.
 
 ### `PredictionResponse`
 
@@ -372,7 +395,7 @@ The repository includes a SwiftUI demo app:
 Demo/MobileIntelligenceDemo
 ```
 
-The demo app shows provider selection, model selection, prompt and query input, request construction, client bootstrapping, response rendering, and a streaming toggle that switches between standard prediction and streamed responses.
+The demo app shows provider selection, model selection, cache policy selection, prompt and query input, request construction, client bootstrapping, response rendering, and a streaming toggle that switches between standard prediction and streamed responses.
 
 Open the Xcode project to run it locally:
 
