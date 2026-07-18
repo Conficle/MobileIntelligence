@@ -21,7 +21,11 @@ import FoundationModels
 @testable import MobileIntelligence
 
 /// Verifies native provider error codes and messages.
+@available(iOS 26.0, macOS 26.0, *)
 @Test func nativeProviderErrorCodesAndMessagesAreCorrect() {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let deviceNotEligible = NativeProviderError.deviceNotEligible
     #expect(deviceNotEligible.code == 1)
     #expect(deviceNotEligible.message == "Device is not eligible")
@@ -40,7 +44,11 @@ import FoundationModels
 }
 
 /// Verifies the native system model name.
+@available(iOS 26.0, macOS 26.0, *)
 @Test func nativeModelTypeNameIsSystem() {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     #expect(NativeModelType.system.name == "system")
 }
 
@@ -109,7 +117,9 @@ import FoundationModels
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies successful native prediction creates a model session.
 @Test func nativeAIProviderCreatesSessionAfterSuccessfulPrediction() async throws {
-    
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -128,7 +138,9 @@ import FoundationModels
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction reuses an existing model session.
 @Test func nativeAIProviderReusesSessionAcrossMultiplePredictions() async throws {
-    
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -209,6 +221,9 @@ import FoundationModels
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictUsesEmptyPromptWhenInstructionsAreNil() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: nil,
@@ -226,7 +241,9 @@ import FoundationModels
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies typed native generation uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictGeneratesUsesEmptyPromptWhenInstructionsAreNil() async throws {
-    
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: nil,
