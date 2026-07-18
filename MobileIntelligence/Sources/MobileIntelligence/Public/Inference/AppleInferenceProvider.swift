@@ -24,7 +24,7 @@
 
 import FoundationModels
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Provider abstraction for typed Apple FoundationModels generation.
 public protocol AppleInferenceProvider: InferenceProvider {
     /// Produces a typed generated response for the request.

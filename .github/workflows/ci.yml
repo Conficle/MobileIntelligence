@@ -18,6 +18,11 @@ jobs:
     name: Build & Test
 
     runs-on: macos-latest
+    
+    defaults:
+      run:
+        shell: bash
+        working-directory: MobileIntelligence
 
     steps:
       - name: Checkout Repository
