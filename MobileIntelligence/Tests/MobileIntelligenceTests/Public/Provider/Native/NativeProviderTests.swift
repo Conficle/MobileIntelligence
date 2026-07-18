@@ -47,6 +47,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies typed native generation when available and provider errors when unavailable.
 @Test func nativeAIProviderPredictGeneratesStringWhenAvailableOrThrowsNativeProviderError() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -75,6 +79,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native text prediction when available and provider errors when unavailable.
 @Test func nativeAIProviderPredictsResponseWhenAvailableOrThrowsNativeProviderError() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -103,6 +111,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies successful native prediction creates a model session.
 @Test func nativeAIProviderCreatesSessionAfterSuccessfulPrediction() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -121,6 +133,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction reuses an existing model session.
 @Test func nativeAIProviderReusesSessionAcrossMultiplePredictions() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -145,6 +161,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies unavailable native prediction maps to native provider errors.
 @Test func nativeAIProviderPredictThrowsSpecificNativeProviderErrorsWhenUnavailable() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -170,6 +190,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies unavailable typed native generation maps to native provider errors.
 @Test func nativeAIProviderPredictGeneratesThrowsSpecificNativeProviderErrorsWhenUnavailable() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -195,6 +219,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictUsesEmptyPromptWhenInstructionsAreNil() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: nil,
@@ -212,6 +240,10 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies typed native generation uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictGeneratesUsesEmptyPromptWhenInstructionsAreNil() async throws {
+    try #require(
+        SystemLanguageModel.default.availability == .available,
+        "Apple Intelligence unavailable"
+    )
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: nil,
