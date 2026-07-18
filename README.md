@@ -110,37 +110,6 @@ You can also add the repository URL directly in Xcode through **File > Add Packa
 
 ## Architecture
 
-### Component Flow
-
-```mermaid
-flowchart LR
-    App["iOS Application"]
-    Client["DefaultAIClient"]
-    Engine["Inference Engine"]
-    Cache["Prediction Cache"]
-    Provider["Inference Provider"]
-    OpenAI["OpenAI"]
-    Apple["Apple Foundation Models"]
-    Custom["Custom Provider"]
-    App -->|"Create PredictionRequest"| Client
-    Client -->|"Predict / Stream"| Engine
-    Engine -->|"Read / Write"| Cache
-    Engine -->|"Execute Request"| Provider
-    Provider --> OpenAI
-    Provider --> Apple
-    Provider --> Custom
-
-    OpenAI -->|"PredictionResponse"| Provider
-    Apple -->|"PredictionResponse"| Provider
-    Custom -->|"PredictionResponse"| Provider
-
-    Provider --> Engine
-    Engine --> Client
-    Client -->|"PredictionResponse"| App
-```
-
-### Block Diagram
-
 ```mermaid
 flowchart TD
     appBlock["App code<br/>SwiftUI / UIKit / application services"]
