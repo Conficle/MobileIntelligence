@@ -1,4 +1,5 @@
 # MobileIntelligence
+[![CI](https://github.com/Conficle/MobileIntelligence/actions/workflows/ci.yml/badge.svg)](https://github.com/Conficle/MobileIntelligence/actions/workflows/ci.yml)
 
 MobileIntelligence is a vendor-agnostic AI SDK for Apple platforms that provides a unified API for cloud and on-device foundation models.
 
