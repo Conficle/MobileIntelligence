@@ -90,6 +90,82 @@ import Testing
     #expect(await provider.predictionRequests.count == 1)
 }
 
+/// Verifies that reload requests bypass cached responses and refresh the cache.
+@Test func defaultInferenceEngineReloadBypassesCachedResponse() async throws {
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "fresh"))
+    let cache = InMemoryPredictionCache()
+    let engine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: cache
+    )
+
+    _ = try await engine.predict(forRequest: makeTestRequest())
+    _ = try await engine.predict(forRequest: makeTestRequest(cachePolicy: .reload))
+
+    #expect(await provider.predictionRequests.count == 2)
+}
+
+/// Verifies that cache-only requests return cached responses without calling the provider.
+@Test func defaultInferenceEngineCacheOnlyReturnsCachedResponse() async throws {
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "fresh"))
+    let cache = InMemoryPredictionCache()
+    let engine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: cache
+    )
+
+    let firstResponse = try await engine.predict(forRequest: makeTestRequest())
+    let cachedResponse = try await engine.predict(forRequest: makeTestRequest(cachePolicy: .cacheOnly))
+
+    #expect(firstResponse.content == "fresh")
+    #expect(cachedResponse.content == "fresh")
+    #expect(await provider.predictionRequests.count == 1)
+}
+
+/// Verifies that cache-only requests fail without calling the provider when no response is cached.
+@Test func defaultInferenceEngineCacheOnlyThrowsOnCacheMiss() async throws {
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "fresh"))
+    let engine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: InMemoryPredictionCache()
+    )
+
+    do {
+        _ = try await engine.predict(forRequest: makeTestRequest(cachePolicy: .cacheOnly))
+        Issue.record("Expected cache-only prediction to fail on cache miss")
+    } catch CoreError.cacheMiss {
+        // Expected
+    } catch {
+        Issue.record("Expected CoreError.cacheMiss, received \(error)")
+    }
+
+    #expect(await provider.predictionRequests.isEmpty)
+}
+
+/// Verifies that cache-only stream requests fail without calling the provider when no response is cached.
+@Test func defaultInferenceEngineStreamCacheOnlyThrowsOnCacheMiss() async throws {
+    let provider = StubInferenceProvider(result: PredictionResponse(content: "fresh"))
+    let engine = DefaultInferenceEngine(
+        provider: provider,
+        model: TestModel(name: "demo"),
+        cache: InMemoryPredictionCache()
+    )
+
+    do {
+        _ = try await engine.stream(for: makeTestRequest(cachePolicy: .cacheOnly))
+        Issue.record("Expected cache-only stream to fail on cache miss")
+    } catch CoreError.cacheMiss {
+        // Expected
+    } catch {
+        Issue.record("Expected CoreError.cacheMiss, received \(error)")
+    }
+
+    #expect(await provider.predictionRequests.isEmpty)
+}
+
 /// Verifies that model changes produce different cache keys.
 @Test func defaultInferenceEngineUsesDifferentCacheKeysForDifferentModels() async throws {
     let request = makeTestRequest()
@@ -187,13 +263,14 @@ import Testing
 
 /// Creates a reusable prediction request for client tests.
 /// - Returns: A prediction request shared by client tests.
-private func makeTestRequest() -> PredictionRequest {
+private func makeTestRequest(cachePolicy: CachePolicy = .automatic) -> PredictionRequest {
     PredictionRequest(
         prompt: Prompt(instructions: "Be helpful."),
         context: Context(),
         query: Query(question: "Hello"),
         maxTokens: 32,
-        reasoning: .medium
+        reasoning: .medium,
+        cachePolicy: cachePolicy
     )
 }
 

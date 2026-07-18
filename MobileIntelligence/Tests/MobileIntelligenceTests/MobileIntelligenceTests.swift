@@ -56,6 +56,20 @@ import Testing
     #expect(request.temperature == 0.5)
     #expect(request.maxTokens == 42)
     #expect(request.reasoning == .medium)
+    #expect(request.cachePolicy == .automatic)
+}
+
+/// Verifies that prediction requests retain custom cache policy values.
+@Test func predictionRequestStoresCachePolicy() {
+    let request = PredictionRequest(
+        context: Context(),
+        query: Query(question: "Hello"),
+        maxTokens: 42,
+        reasoning: .medium,
+        cachePolicy: .reload
+    )
+
+    #expect(request.cachePolicy == .reload)
 }
 
 /// Verifies that prediction responses default to empty content.
@@ -79,6 +93,10 @@ import Testing
     let predictionFailed = CoreError.predictionFailed
     #expect(predictionFailed.code == 1002)
     #expect(predictionFailed.message == "Prediction failed")
+
+    let cacheMiss = CoreError.cacheMiss
+    #expect(cacheMiss.code == 1004)
+    #expect(cacheMiss.message == "Cache miss")
 }
 
 /// Verifies that provider type cases are distinct.
