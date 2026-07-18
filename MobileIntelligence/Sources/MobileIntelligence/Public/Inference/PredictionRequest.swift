@@ -30,6 +30,13 @@ public enum ReasoningEffort: Sendable {
     case deep
 }
 
+/// Controls how prediction requests interact with the local prediction cache.
+public enum CachePolicy: Sendable {
+    case automatic
+    case reload
+    case cacheOnly
+}
+
 /// Input payload for an inference prediction.
 public struct PredictionRequest: Sendable {
     let prompt: Prompt?
@@ -38,6 +45,7 @@ public struct PredictionRequest: Sendable {
     let temperature: Double?
     let maxTokens: Int?
     let reasoning: ReasoningEffort
+    let cachePolicy: CachePolicy
 
     /// Creates a prediction request.
     /// - Parameters:
@@ -47,17 +55,20 @@ public struct PredictionRequest: Sendable {
     ///   - temperature: Optional sampling temperature.
     ///   - maxTokens: Optional maximum output token count.
     ///   - reasoning: Requested reasoning effort.
+    ///   - cachePolicy: Cache behavior for this request.
     public init(prompt: Prompt? = nil,
                 context: Context,
                 query: Query,
                 temperature: Double? = nil,
                 maxTokens: Int?,
-                reasoning: ReasoningEffort) {
+                reasoning: ReasoningEffort,
+                cachePolicy: CachePolicy = .automatic) {
         self.prompt = prompt
         self.context = context
         self.query = query
         self.temperature = temperature
         self.maxTokens = maxTokens
         self.reasoning = reasoning
+        self.cachePolicy = cachePolicy
     }
 }
