@@ -24,7 +24,7 @@
 
 import FoundationModels
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 extension DefaultAIClient: AppleInferenceClient {
     /// Produces a typed Apple FoundationModels response through the configured engine.
     /// - Parameters:

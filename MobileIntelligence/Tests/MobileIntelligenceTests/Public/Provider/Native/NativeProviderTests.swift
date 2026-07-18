@@ -44,7 +44,7 @@ import Testing
     #expect(NativeModelType.system.name == "system")
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies typed native generation when available and provider errors when unavailable.
 @Test func nativeAIProviderPredictGeneratesStringWhenAvailableOrThrowsNativeProviderError() async throws {
     let provider = NativeAIProvider()
@@ -72,7 +72,7 @@ import Testing
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies native text prediction when available and provider errors when unavailable.
 @Test func nativeAIProviderPredictsResponseWhenAvailableOrThrowsNativeProviderError() async throws {
     let provider = NativeAIProvider()
@@ -100,7 +100,7 @@ import Testing
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies successful native prediction creates a model session.
 @Test func nativeAIProviderCreatesSessionAfterSuccessfulPrediction() async throws {
     let provider = NativeAIProvider()
@@ -118,7 +118,7 @@ import Testing
     #expect(session != nil)
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction reuses an existing model session.
 @Test func nativeAIProviderReusesSessionAcrossMultiplePredictions() async throws {
     let provider = NativeAIProvider()
@@ -142,7 +142,7 @@ import Testing
     #expect(ObjectIdentifier(firstSession!) == ObjectIdentifier(secondSession!))
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies unavailable native prediction maps to native provider errors.
 @Test func nativeAIProviderPredictThrowsSpecificNativeProviderErrorsWhenUnavailable() async throws {
     let provider = NativeAIProvider()
@@ -167,7 +167,7 @@ import Testing
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies unavailable typed native generation maps to native provider errors.
 @Test func nativeAIProviderPredictGeneratesThrowsSpecificNativeProviderErrorsWhenUnavailable() async throws {
     let provider = NativeAIProvider()
@@ -192,7 +192,7 @@ import Testing
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictUsesEmptyPromptWhenInstructionsAreNil() async throws {
     let provider = NativeAIProvider()
@@ -209,7 +209,7 @@ import Testing
     #expect(response.content is String)
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies typed native generation uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictGeneratesUsesEmptyPromptWhenInstructionsAreNil() async throws {
     let provider = NativeAIProvider()
@@ -226,7 +226,7 @@ import Testing
     #expect(result is String)
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies native provider bootstrap completes.
 @Test func nativeAIProviderBootstrapDoesNotThrow() async throws {
     let provider = NativeAIProvider()
