@@ -1,0 +1,41 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - development
+      - integration
+      - main
+
+  pull_request:
+    branches:
+      - development
+      - integration
+      - main
+
+jobs:
+  build-and-test:
+    name: Build & Test
+
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Select Latest Stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show Swift Version
+        run: swift --version
+
+      - name: Resolve Dependencies
+        run: swift package resolve
+
+      - name: Build Package
+        run: swift build
+
+      - name: Run Unit Tests
+        run: swift test
