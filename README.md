@@ -2,10 +2,13 @@
 
 MobileIntelligence is a vendor-agnostic AI SDK for Apple platforms that provides a unified API for cloud and on-device foundation models.
 
-It gives your app one consistent client surface for native Apple inference, OpenAI, Anthropic, and custom providers while keeping request construction, model selection, and response handling small and testable.
+Build AI-powered iOS applications without coupling your code to a specific AI vendor. Write inference code once and switch between OpenAI, Apple Foundation Models, or your own backend through a consistent, Swift Concurrency-first API.
+
+MobileIntelligence separates inference orchestration from provider implementations, allowing providers to focus on AI integration while the inference engine handles request execution, streaming, response normalization, and caching.
 
 Write inference code once and switch between providers such as OpenAI, Apple Foundation Models, Anthropic, or your own backend without changing your application code.
 
+- [Why MobileIntelligence?](#why-mobileintelligence)
 - [Features](#features)
 - [Quick Start](#write-predictions-fast)
 - [Requirements](#requirements)
@@ -20,18 +23,36 @@ Write inference code once and switch between providers such as OpenAI, Apple Fou
 - [Roadmap](#roadmap)
 - [License](#license)
 
+## Why MobileIntelligence?
+
+MobileIntelligence is designed around a simple idea:
+
+> Your application should depend on AI capabilities, not AI vendors.
+
+### Design Principles
+
+- ✅ Vendor-agnostic inference API
+- ✅ Cloud and on-device AI through a unified interface
+- ✅ Swift Concurrency-first architecture using actors
+- ✅ Built-in streaming and response caching
+- ✅ Extensible provider architecture
+- ✅ Clean separation between application, inference engine, and providers
+
+Applications interact with a single inference API while providers encapsulate vendor-specific implementation details. This enables switching AI providers with minimal application changes.
+
 ## Features
 
-- [x] Provider-based prediction API for Apple, OpenAI   , and custom backends.
-- [x] Swift Concurrency first, with actor-backed clients and providers.
-- [x] Native Apple inference using `FoundationModels` on supported OS versions.
-- [x] OpenAI Responses API integration through a lightweight REST layer.
-- [x] Typed prediction requests with prompt, context, query, temperature, token limit, reasoning effort, and cache policy.
-- [x] Normalized text responses through `PredictionResponse`.
-- [x] Shared in-memory prediction caching for repeated provider/model/request combinations, with request-level cache policy controls.
-- [x] Streaming inference support for progressively consuming provider responses.
-- [x] SwiftUI demo app for provider selection, streaming toggle, cache policy selection, and prediction flow.
-- [x] Unit coverage for clients, providers, REST infrastructure, models, and caching behavior.
+- [x] Vendor-agnostic prediction API.
+- [x] OpenAI and Apple Foundation Models support.
+- [x] Custom provider support through `InferenceProvider`.
+- [x] Swift Concurrency-first architecture using actors.
+- [x] Streaming inference using `AsyncThrowingStream`.
+- [x] Shared prediction caching with configurable cache policies.
+- [x] Native Apple inference using `FoundationModels`.
+- [x] OpenAI Responses API integration.
+- [x] Typed prediction requests and normalized responses.
+- [x] SwiftUI demo application.
+- [x] Comprehensive unit test coverage.
 
 ## Quick Start
 
@@ -75,7 +96,7 @@ Add MobileIntelligence to your package dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<owner>/MobileIntelligence.git", branch: "main")
+    .package(url: "https://github.com/<owner>/MobileIntelligence.git", from: "0.1.0")
 ]
 ```
 
@@ -93,41 +114,29 @@ You can also add the repository URL directly in Xcode through **File > Add Packa
 
 ```mermaid
 flowchart LR
-    app["iOS / SwiftUI app"]
+    App["iOS Application"]
+    Client["DefaultAIClient"]
+    Engine["Inference Engine"]
+    Cache["Prediction Cache"]
+    Provider["Inference Provider"]
+    OpenAI["OpenAI"]
+    Apple["Apple Foundation Models"]
+    Custom["Custom Provider"]
+    App -->|"Create PredictionRequest"| Client
+    Client -->|"Predict / Stream"| Engine
+    Engine -->|"Read / Write"| Cache
+    Engine -->|"Execute Request"| Provider
+    Provider --> OpenAI
+    Provider --> Apple
+    Provider --> Custom
 
-    subgraph sdk["MobileIntelligence SDK"]
-        client["DefaultAIClient<br/>public async API"]
-        engine["DefaultInferenceEngine<br/>bootstrap, predict, stream"]
-        cache["InMemoryPredictionCache<br/>shared process cache"]
-        models["Prediction models<br/>Prompt, Context, Query,<br/>PredictionRequest, PredictionResponse"]
+    OpenAI -->|"PredictionResponse"| Provider
+    Apple -->|"PredictionResponse"| Provider
+    Custom -->|"PredictionResponse"| Provider
 
-        subgraph providers["Provider adapters"]
-            native["NativeAIProvider<br/>Apple FoundationModels"]
-            openaiProvider["OpenAIProvider<br/>Responses API adapter"]
-            anthropic["AnthropicAIProvider<br/>scaffolded"]
-            custom["Custom InferenceProvider<br/>app-defined"]
-        end
-
-        rest["DefaultRESTClient<br/>typed HTTP + streaming"]
-        streaming["OpenAI stream decoder / mapper<br/>SSE to InferenceStreamEvent"]
-    end
-
-    foundation["Apple FoundationModels"]
-    openai["OpenAI Responses API"]
-    backend["Custom backend"]
-
-    app -->|"imports SDK and calls"| client
-    client -->|"creates and delegates to"| engine
-    client --> models
-    engine -->|"cache lookup / store"| cache
-    engine -->|"uses request and response types"| models
-    engine -->|"invokes selected"| providers
-
-    native -->|"on-device inference"| foundation
-    openaiProvider -->|"builds requests"| rest
-    openaiProvider -->|"maps streaming events"| streaming
-    rest -->|"HTTPS"| openai
-    custom --> backend
+    Provider --> Engine
+    Engine --> Client
+    Client -->|"PredictionResponse"| App
 ```
 
 ### Block Diagram
@@ -382,10 +391,10 @@ An iOS 26+ API for typed Apple `FoundationModels` generation using `Generable` o
 
 | Provider | Status | Notes |
 | --- | --- | --- |
-| Native Apple | Implemented | Uses `FoundationModels`, requires iOS 26+, and supports typed `Generable` output. |
-| OpenAI | Implemented | Uses `OpenAIProvider`, `DefaultRESTClient`, and `OpenAIModelType`. |
-| Anthropic | Scaffolded | `AnthropicAIProvider` exists, but inference is currently a placeholder. |
-| Custom | Supported | Implement `InferenceProvider` to add your own backend. |
+| Apple Foundation Models | ✅ Implemented | Native on-device inference with typed `Generable` support. |
+| OpenAI | ✅ Implemented | Responses API with streaming support. |
+| Custom Providers | ✅ Supported | Implement `InferenceProvider` to integrate your own backend. |
+| Anthropic | 🚧 Planned | Scheduled for a future release. |
 
 ## Demo App
 
@@ -421,14 +430,42 @@ Demo/
 
 ## Roadmap
 
-- Complete Anthropic inference.
-- Expand streaming support to additional provider-specific event handling.
-- Add structured response helpers.
-- Expand context handling.
-- Add persistent cache storage, TTLs, and eviction policies.
-- Add cache support for typed Apple generation.
-- Add richer provider authentication configuration.
-- Add integration tests against live provider sandboxes.
+### v0.2.0
+
+- Prompt Builder
+- Prompt Templates
+- Prompt Rendering
+- Prompt Validation
+
+### v0.3.0
+
+- Structured Output
+- Embeddings
+- Persistent Prediction Cache
+- Cache Expiration Policies
+
+### v0.4.0
+
+- Anthropic Provider
+- Enhanced Provider Authentication
+- Additional Streaming Enhancements
+
+### Future
+
+- Vision Models
+- Audio Understanding
+- Tool Calling
+- Conversation Memory
+- Retrieval-Augmented Generation (RAG)
+- Agent Workflows
+
+## Vision
+
+MobileIntelligence aims to become a comprehensive AI SDK for Apple platforms.
+
+Beyond inference, future modules will include Prompt Engineering, Structured Output, Embeddings, Vision, Tool Calling, Retrieval-Augmented Generation (RAG), and Agent workflows—all exposed through a consistent, provider-agnostic architecture.
+
+The goal is to allow applications to adopt new AI capabilities without rewriting application code or becoming tightly coupled to individual AI vendors.
 
 ## License
 
