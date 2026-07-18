@@ -24,7 +24,7 @@
 
 import FoundationModels
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Adds typed Apple FoundationModels generation support to an inference engine.
 protocol AppleInferenceEngine: InferenceEngine {
     /// Produces a typed generated response for the request.

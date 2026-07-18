@@ -24,7 +24,7 @@
 
 import FoundationModels
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 extension DefaultInferenceEngine {
     /// Delegates typed Apple generation requests to an Apple-capable provider.
     /// - Parameters:

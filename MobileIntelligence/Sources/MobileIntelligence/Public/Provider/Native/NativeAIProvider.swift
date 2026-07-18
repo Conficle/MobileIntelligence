@@ -25,7 +25,7 @@
 
 import FoundationModels
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Native Apple FoundationModels inference provider.
 public final actor NativeAIProvider: AIProvider {
     var session: LanguageModelSession?

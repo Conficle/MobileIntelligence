@@ -25,7 +25,7 @@
 
 import FoundationModels
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 extension NativeAIProvider: AppleInferenceProvider {
     /// Prepares the native provider with the selected model.
     /// - Parameter model: The model to use for future native predictions.
@@ -86,7 +86,7 @@ extension NativeAIProvider: AppleInferenceProvider {
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 private extension NativeAIProvider {
     /// Verifies that the system language model is available for inference.
     func checkAvailability() throws {

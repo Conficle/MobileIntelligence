@@ -19,7 +19,7 @@ import FoundationModels
 import Testing
 @testable import MobileIntelligence
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Test inference engine for Apple client prediction tests.
 private actor TestInferenceEngine: InferenceEngine {
     let response = PredictionResponse(content: "apple client ok")
@@ -43,7 +43,7 @@ private actor TestInferenceEngine: InferenceEngine {
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Stub Apple inference engine that supports typed generation.
 private actor StubAppleInferenceEngine: AppleInferenceEngine {
     /// Accepts a bootstrap call for test setup.
@@ -78,7 +78,7 @@ private actor StubAppleInferenceEngine: AppleInferenceEngine {
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies that the default client can predict through an actor-backed engine.
 @Test func defaultAIClientPredictsThroughConfiguredInferenceEngineWithActorStub() async throws {
     let engine = TestInferenceEngine()
@@ -90,7 +90,7 @@ private actor StubAppleInferenceEngine: AppleInferenceEngine {
     #expect(response.content == "apple client ok")
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Verifies that the default client can use Apple typed generation.
 @Test func defaultAIClientPredictsUsingAppleInferenceClient() async throws {
     let client = DefaultAIClient(clientFactory: StubClientFactory(engine: StubAppleInferenceEngine()))
@@ -108,7 +108,7 @@ private struct TestModel: AIModel {
     let name: String
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Mock provider used to bootstrap Apple client tests.
 private actor MockProvider: InferenceProvider {
     var mockResponse: PredictionResponse?
@@ -133,7 +133,7 @@ private actor MockProvider: InferenceProvider {
     }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.0, macOS 26.0, *)
 /// Stub factory that returns a fixed inference engine.
 private actor StubClientFactory: ClientFactory {
     private let engine: any InferenceEngine
