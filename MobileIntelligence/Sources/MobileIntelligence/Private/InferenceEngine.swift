@@ -63,7 +63,7 @@ final actor DefaultInferenceEngine: InferenceEngine {
         await provider.bootstrap(withModel: model)
     }
 
-    /// Returns a cached prediction when available, otherwise calls the provider.
+    /// Returns a cached prediction when available and allowed, otherwise calls the provider.
     /// - Parameter request: The prediction request to execute.
     /// - Returns: The cached or newly generated prediction response.
     func predict(forRequest request: PredictionRequest) async throws -> PredictionResponse {
@@ -73,8 +73,12 @@ final actor DefaultInferenceEngine: InferenceEngine {
             request: request
         )
 
-        if let cachedResponse = await cache.response(for: key) {
+        if request.cachePolicy != .reload, let cachedResponse = await cache.response(for: key) {
             return cachedResponse
+        }
+
+        if request.cachePolicy == .cacheOnly {
+            throw CoreError.cacheMiss
         }
 
         let response = try await provider.predict(forRequest: request)
@@ -87,11 +91,15 @@ final actor DefaultInferenceEngine: InferenceEngine {
                                          model: self.modelName,
                                          request: request)
 
-        if let cachedResponse = await cache.response(for: key) {
+        if request.cachePolicy != .reload, let cachedResponse = await cache.response(for: key) {
             return AsyncThrowingStream { continuation in
                 continuation.yield(.completed(cachedResponse))
                 continuation.finish()
             }
+        }
+
+        if request.cachePolicy == .cacheOnly {
+            throw CoreError.cacheMiss
         }
 
         let stream = try await self.provider.stream(for: request)

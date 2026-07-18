@@ -32,6 +32,7 @@ struct ContentView: View {
     @AppStorage("selectedAnthropicModel") private var selectedAnthropicModel = AnthropicModelType.claude4_5_sonnet.rawValue
     @AppStorage("openAIAPIKey") private var openAIAPIKey = ""
     @AppStorage("useStreaming") private var useStreaming = false
+    @AppStorage("selectedCachePolicy") private var selectedCachePolicy = DemoCachePolicyOption.automatic.rawValue
     @State private var promptText = ""
     @State private var queryText = ""
     @State private var responseText = ""
@@ -41,6 +42,11 @@ struct ContentView: View {
     /// Currently selected provider option.
     private var provider: AIProviderOption {
         AIProviderOption(rawValue: selectedAIProvider) ?? .native
+    }
+
+    /// Currently selected cache policy.
+    private var cachePolicy: CachePolicy {
+        DemoCachePolicyOption(rawValue: selectedCachePolicy)?.cachePolicy ?? .automatic
     }
 
     /// Indicates whether the current UI state can start a prediction.
@@ -206,7 +212,8 @@ struct ContentView: View {
                 query: Query(question: trimmedQuery),
                 temperature: nil,
                 maxTokens: nil,
-                reasoning: .medium
+                reasoning: .medium,
+                cachePolicy: cachePolicy
             )
 
             if useStreaming {
@@ -225,6 +232,8 @@ struct ContentView: View {
                 let response = try await client.predict(forRequest: request)
                 responseText = response.content.isEmpty ? "PredictionResponse received." : response.content
             }
+        } catch let error as CoreError {
+            errorMessage = error.message
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -240,6 +249,7 @@ struct SettingsView: View {
     @AppStorage("selectedAnthropicModel") private var selectedAnthropicModel = AnthropicModelType.claude4_5_sonnet.rawValue
     @AppStorage("openAIAPIKey") private var openAIAPIKey = ""
     @AppStorage("useStreaming") private var useStreaming = false
+    @AppStorage("selectedCachePolicy") private var selectedCachePolicy = DemoCachePolicyOption.automatic.rawValue
 
     /// Root view content for demo settings.
     var body: some View {
@@ -259,6 +269,16 @@ struct SettingsView: View {
                 Text("When enabled, the demo app uses the selected provider's streaming API and shows responses progressively.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Cache") {
+                Picker("Cache Policy", selection: $selectedCachePolicy) {
+                    ForEach(DemoCachePolicyOption.allCases) { policy in
+                        Text(policy.displayName)
+                            .tag(policy.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
             }
 
             modelSection
@@ -307,6 +327,40 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.menu)
             }
+        }
+    }
+}
+
+/// Cache policy choices available in the demo settings.
+private enum DemoCachePolicyOption: String, CaseIterable, Identifiable {
+    case automatic
+    case reload
+    case cacheOnly
+
+    /// Stable identifier used by SwiftUI pickers.
+    var id: String { rawValue }
+
+    /// Display name shown in settings.
+    var displayName: String {
+        switch self {
+        case .automatic:
+            "Automatic"
+        case .reload:
+            "Reload"
+        case .cacheOnly:
+            "Cache Only"
+        }
+    }
+
+    /// SDK cache policy represented by the demo option.
+    var cachePolicy: CachePolicy {
+        switch self {
+        case .automatic:
+            .automatic
+        case .reload:
+            .reload
+        case .cacheOnly:
+            .cacheOnly
         }
     }
 }
