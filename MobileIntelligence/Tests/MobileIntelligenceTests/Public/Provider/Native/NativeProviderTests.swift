@@ -16,37 +16,48 @@
 //
 
 import Foundation
-import FoundationModels
 import Testing
+import FoundationModels
 @testable import MobileIntelligence
 
 /// Verifies native provider error codes and messages.
+@available(iOS 26.0, macOS 26.0, *)
 @Test func nativeProviderErrorCodesAndMessagesAreCorrect() {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let deviceNotEligible = NativeProviderError.deviceNotEligible
     #expect(deviceNotEligible.code == 1)
     #expect(deviceNotEligible.message == "Device is not eligible")
-
+    
     let appleIntelligenceNotEnabled = NativeProviderError.appleIntelligenceNotEnabled
     #expect(appleIntelligenceNotEnabled.code == 2)
     #expect(appleIntelligenceNotEnabled.message == "Apple Intelligence is not enabled")
-
+    
     let modelNotReady = NativeProviderError.modelNotReady
     #expect(modelNotReady.code == 3)
     #expect(modelNotReady.message == "Model is not ready")
-
+    
     let unknown = NativeProviderError.unknown
     #expect(unknown.code == 4)
     #expect(unknown.message == "Unknown")
 }
 
 /// Verifies the native system model name.
+@available(iOS 26.0, macOS 26.0, *)
 @Test func nativeModelTypeNameIsSystem() {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     #expect(NativeModelType.system.name == "system")
 }
 
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies typed native generation when available and provider errors when unavailable.
 @Test func nativeAIProviderPredictGeneratesStringWhenAvailableOrThrowsNativeProviderError() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -55,11 +66,11 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     await provider.setAvailabilityOverride(.available)
     let result: String = try await provider.predict(forRequest: request, generating: String.self) ?? ""
     #expect(result is String)
-
+    
     for reason in [
         SystemLanguageModel.Availability.unavailable(.modelNotReady),
         SystemLanguageModel.Availability.unavailable(.appleIntelligenceNotEnabled),
@@ -75,6 +86,9 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native text prediction when available and provider errors when unavailable.
 @Test func nativeAIProviderPredictsResponseWhenAvailableOrThrowsNativeProviderError() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -83,11 +97,11 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     await provider.setAvailabilityOverride(.available)
     let response = try await provider.predict(forRequest: request)
     #expect(response.content is String)
-
+    
     for reason in [
         SystemLanguageModel.Availability.unavailable(.modelNotReady),
         SystemLanguageModel.Availability.unavailable(.appleIntelligenceNotEnabled),
@@ -103,6 +117,9 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies successful native prediction creates a model session.
 @Test func nativeAIProviderCreatesSessionAfterSuccessfulPrediction() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -111,7 +128,7 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     await provider.setAvailabilityOverride(.available)
     _ = try await provider.predict(forRequest: request)
     let session = await provider.session
@@ -121,6 +138,9 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction reuses an existing model session.
 @Test func nativeAIProviderReusesSessionAcrossMultiplePredictions() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -129,14 +149,14 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     await provider.setAvailabilityOverride(.available)
     _ = try await provider.predict(forRequest: request)
     let firstSession = await provider.session
-
+    
     _ = try await provider.predict(forRequest: request)
     let secondSession = await provider.session
-
+    
     #expect(firstSession != nil)
     #expect(secondSession != nil)
     #expect(ObjectIdentifier(firstSession!) == ObjectIdentifier(secondSession!))
@@ -145,6 +165,9 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies unavailable native prediction maps to native provider errors.
 @Test func nativeAIProviderPredictThrowsSpecificNativeProviderErrorsWhenUnavailable() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -153,14 +176,14 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     for reason in [
         SystemLanguageModel.Availability.UnavailableReason.modelNotReady,
         SystemLanguageModel.Availability.UnavailableReason.appleIntelligenceNotEnabled,
         SystemLanguageModel.Availability.UnavailableReason.deviceNotEligible
     ] {
         await provider.setAvailabilityOverride(.unavailable(reason))
-
+        
         await #expect(throws: NativeProviderError.self) {
             _ = try await provider.predict(forRequest: request)
         }
@@ -170,6 +193,9 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies unavailable typed native generation maps to native provider errors.
 @Test func nativeAIProviderPredictGeneratesThrowsSpecificNativeProviderErrorsWhenUnavailable() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: Prompt(instructions: "Test"),
@@ -178,14 +204,14 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     for reason in [
         SystemLanguageModel.Availability.UnavailableReason.modelNotReady,
         SystemLanguageModel.Availability.UnavailableReason.appleIntelligenceNotEnabled,
         SystemLanguageModel.Availability.UnavailableReason.deviceNotEligible
     ] {
         await provider.setAvailabilityOverride(.unavailable(reason))
-
+        
         await #expect(throws: NativeProviderError.self) {
             _ = try await provider.predict(forRequest: request, generating: String.self)
         }
@@ -195,6 +221,9 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies native prediction uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictUsesEmptyPromptWhenInstructionsAreNil() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: nil,
@@ -203,7 +232,7 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     await provider.setAvailabilityOverride(.available)
     let response = try await provider.predict(forRequest: request)
     #expect(response.content is String)
@@ -212,6 +241,9 @@ import Testing
 @available(iOS 26.0, macOS 26.0, *)
 /// Verifies typed native generation uses empty instructions when prompt is nil.
 @Test func nativeAIProviderPredictGeneratesUsesEmptyPromptWhenInstructionsAreNil() async throws {
+    if SystemLanguageModel.default.availability != .available {
+        return
+    }
     let provider = NativeAIProvider()
     let request = PredictionRequest(
         prompt: nil,
@@ -220,7 +252,7 @@ import Testing
         maxTokens: nil,
         reasoning: .low
     )
-
+    
     await provider.setAvailabilityOverride(.available)
     let result: String = try await provider.predict(forRequest: request, generating: String.self) ?? ""
     #expect(result is String)
@@ -230,9 +262,9 @@ import Testing
 /// Verifies native provider bootstrap completes.
 @Test func nativeAIProviderBootstrapDoesNotThrow() async throws {
     let provider = NativeAIProvider()
-
+    
     await provider.bootstrap(withModel: NativeTestModel(name: "demo"))
-
+    
     #expect(true)
 }
 
