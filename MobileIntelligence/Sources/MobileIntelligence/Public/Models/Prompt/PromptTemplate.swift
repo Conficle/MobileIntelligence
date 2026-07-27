@@ -6,5 +6,5 @@
 //
 
 public protocol PromptTemplate: Sendable {
-    func buildPrompt() -> Prompt
+    func buildPrompt() throws -> Prompt
 }

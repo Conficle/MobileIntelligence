@@ -13,8 +13,24 @@ public struct ZeroShotPrompt {
     }
 }
 
+public extension ZeroShotPrompt {
+    struct Builder {
+        var instructions: String = ""
+        
+        @discardableResult
+        public mutating func instructions(_ value: String) -> Self {
+            instructions = value
+            return self
+        }
+
+        public func build() throws -> PromptTemplate {
+            return ZeroShotPrompt(systemInstruction: instructions)
+        }
+    }
+}
+
 extension ZeroShotPrompt: PromptTemplate {
-    public func buildPrompt() -> Prompt {
+    public func buildPrompt() throws -> Prompt {
         return .init(instructions: systemInstruction)
     }
 }
