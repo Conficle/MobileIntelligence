@@ -70,3 +70,26 @@ public enum CoreError: Error, MobileIntelligenceError {
         }
     }
 }
+
+public enum PromptError: Error, MobileIntelligenceError {
+    case emptyInstructions
+    case emptyExamples
+    
+    public var code: Int {
+        switch self {
+        case .emptyInstructions:
+            return 2001
+        case .emptyExamples:
+            return 2002
+        }
+    }
+    
+    public var message: String {
+        switch self {
+        case .emptyInstructions:
+            return "Empty instructions"
+        case .emptyExamples:
+            return "Empty examples"
+        }
+    }
+}
